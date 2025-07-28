@@ -1,9 +1,11 @@
 import { createClient } from "@supabase/supabase-js"
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://lqiabcgdtnadggjswbmr.supabase.co"
-const supabaseAnonKey =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxaWFiY2dkdG5hZGdnanN3Ym1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwNTM2NTksImV4cCI6MjA2MjYyOTY1OX0.6_FBwdlkA2bVS0-lJwn3twyLNmqk_QFZdUpwilyA-ac"
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase credentials. Please check your .env.local file.')
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 

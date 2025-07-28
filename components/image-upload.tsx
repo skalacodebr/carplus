@@ -107,7 +107,7 @@ export default function ImageUpload({ currentImageUrl, onImageSelected, isUpload
         disabled={isUploading}
       />
 
-      <button type="button" onClick={handleButtonClick} className="text-[#ED1C24] text-sm" disabled={isUploading}>
+      <button type="button" onClick={handleButtonClick} className="text-[#fdc300] text-sm" disabled={isUploading}>
         {isUploading ? "Enviando..." : "Alterar foto"}
       </button>
     </div>

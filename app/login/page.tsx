@@ -6,7 +6,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { getCookie, setCookie, isAuthenticated } from "@/lib/client-cookies"
+import { isAuthenticated } from "@/lib/client-cookies"
 
 export default function Login() {
   const [email, setEmail] = useState("")
@@ -149,24 +149,16 @@ export default function Login() {
           return
         }
 
-        // Set a client-side cookie as a backup
-        if (data?.user?.id) {
-          setCookie("userId", data.user.id.toString())
-        }
+        // Debug: verificar o que foi retornado
+        console.log("Login realizado com sucesso:", data)
 
         // Set redirecting state to show feedback
         setRedirecting(true)
 
-        // Wait a moment to ensure cookies are set
+        // Redirecionar após login bem-sucedido
         setTimeout(() => {
-          // Check if we have the cookie before redirecting
-          if (getCookie("userId")) {
-            console.log("Cookie set successfully, redirecting to dashboard")
-            window.location.href = "/dashboard"
-          } else {
-            console.error("Cookie not set after login")
-            alert("Erro ao fazer login: Cookie não foi definido")
-          }
+          console.log("Redirecionando para dashboard...")
+          router.push("/dashboard")
         }, 500)
       } catch (error) {
         console.error("Erro ao fazer login:", error)

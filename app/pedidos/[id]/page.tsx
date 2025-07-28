@@ -209,7 +209,7 @@ export default function PedidoDetalhe({ params }: { params: { id: string } }) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#2C2B34] px-5">
         <p className="text-white">Pedido não encontrado</p>
-        <button onClick={() => router.back()} className="mt-4 bg-[#ED1C24] text-white py-2 px-4 rounded-full">
+        <button onClick={() => router.back()} className="mt-4 bg-[#fdc300] text-white py-2 px-4 rounded-full">
           Voltar
         </button>
       </div>
@@ -343,7 +343,7 @@ export default function PedidoDetalhe({ params }: { params: { id: string } }) {
       <div className="p-4">
         <Link
           href="/historico"
-          className="block w-full bg-[#ED1C24] text-white py-3 rounded-full font-bold text-center"
+          className="block w-full bg-[#fdc300] text-white py-3 rounded-full font-bold text-center"
         >
           Voltar para Histórico
         </Link>

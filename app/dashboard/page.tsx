@@ -154,24 +154,28 @@ export default function Dashboard() {
       // Get all packages and then filter for distinct names with minimum price
       const { data, error } = await supabase
         .from("pacotes")
-        .select("nome, preco, imagem")
+        .select("descricao, preco, imagem")
         .order("preco", { ascending: true })
 
       if (error) {
         console.error("Erro ao buscar produtos:", error)
+        console.error("Detalhes do erro:", JSON.stringify(error, null, 2))
         return
       }
 
       if (data) {
         // Get distinct packages by name, keeping the one with lowest price
-        const distinctProdutos = data.reduce((acc: Produto[], current: Produto) => {
-          const existing = acc.find((item) => item.nome === current.nome)
+        const distinctProdutos = data.reduce((acc: Produto[], current: any) => {
+          const produto = { ...current, nome: current.descricao }
+          const existing = acc.find((item) => item.nome === produto.nome)
           if (!existing) {
-            acc.push(current)
+            acc.push(produto)
           }
           return acc
         }, [])
 
+        console.log("Produtos encontrados:", distinctProdutos.length)
+        console.log("Primeiros 3 produtos:", distinctProdutos.slice(0, 3))
         setProdutos(distinctProdutos)
       }
     } catch (error) {
@@ -508,9 +512,11 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Título e ícone de carrinho */}
+      {/* Logo e ícone de carrinho */}
       <div className="relative flex justify-center items-center py-4 px-4">
-        <h1 className="text-xl font-bold mt-4">Car+ Microesferas</h1>
+        <div className="mt-4">
+          <Image src="/images/car-logo-complete.png" alt="CAR+ Logo" width={180} height={50} priority />
+        </div>
         <button
           onClick={navigateToCart}
           className="absolute right-4 top-1/2 transform -translate-y-1/2 p-2 rounded-full hover:bg-[#3A3942] transition-colors"
@@ -1022,6 +1028,19 @@ export default function Dashboard() {
               </div>
             )}
 
+            {/* Botão de histórico */}
+            <div className="flex justify-center mt-4">
+              <Link 
+                href="/historico" 
+                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Ver histórico
+              </Link>
+            </div>
+
             {/* Resultado da calculadora - aparece acima do botão quando calculado */}
             {calculationResult && (
               <div
@@ -1041,7 +1060,7 @@ export default function Dashboard() {
         <div className="p-4">
           <button
             onClick={calculationResult ? handleResetCalculator : handleCalcular}
-            className="w-full bg-[#ED1C24] text-white py-4 rounded-full font-bold"
+            className="w-full bg-[#fdc300] text-white py-4 rounded-full font-bold"
             disabled={isCalculating}
           >
             {isCalculating ? "Calculando..." : calculationResult ? "Novo cálculo" : "Calcular"}

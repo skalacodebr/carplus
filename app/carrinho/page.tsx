@@ -423,7 +423,7 @@ export default function Carrinho() {
             <p className="text-gray-400 mb-4">Seu carrinho está vazio</p>
             <button
               onClick={() => router.push("/")}
-              className="px-4 py-2 bg-[#ED1C24] text-white rounded-md hover:bg-opacity-90"
+              className="px-4 py-2 bg-[#fdc300] text-white rounded-md hover:bg-opacity-90"
             >
               Continuar comprando
             </button>
@@ -598,7 +598,7 @@ export default function Carrinho() {
                   name="entrega"
                   checked={tipoEntrega === "retirada"}
                   onChange={() => setTipoEntrega("retirada")}
-                  className="mr-3 w-[20px] h-[20px] mt-1 accent-[#ED1C24]"
+                  className="mr-3 w-[20px] h-[20px] mt-1 accent-[#fdc300]"
                 />
                 <div>
                   <label htmlFor="retirada" className="font-medium cursor-pointer">
@@ -614,7 +614,7 @@ export default function Carrinho() {
                   name="entrega"
                   checked={tipoEntrega === "entrega"}
                   onChange={() => setTipoEntrega("entrega")}
-                  className="mr-3 w-[20px] h-[20px] mt-1 accent-[#ED1C24]"
+                  className="mr-3 w-[20px] h-[20px] mt-1 accent-[#fdc300]"
                 />
                 <div>
                   <label htmlFor="entrega" className="font-medium cursor-pointer">
@@ -644,7 +644,7 @@ export default function Carrinho() {
                         <p className="text-xs text-gray-400">CEP: {enderecoAlternativo.cep}</p>
                       </div>
                       <div className="flex space-x-2">
-                        <button onClick={handleOpenEnderecoModal} className="text-xs text-[#ED1C24] hover:underline">
+                        <button onClick={handleOpenEnderecoModal} className="text-xs text-[#fdc300] hover:underline">
                           Editar endereço alternativo
                         </button>
                         <button
@@ -669,7 +669,7 @@ export default function Carrinho() {
                         </p>
                         <p className="text-xs text-gray-400">CEP: {userInfo.cep}</p>
                       </div>
-                      <button onClick={handleOpenEnderecoModal} className="text-xs text-[#ED1C24] hover:underline">
+                      <button onClick={handleOpenEnderecoModal} className="text-xs text-[#fdc300] hover:underline">
                         Usar endereço alternativo para este pedido
                       </button>
                     </div>
@@ -680,7 +680,7 @@ export default function Carrinho() {
                       </p>
                       <button
                         onClick={handleOpenEnderecoModal}
-                        className="px-3 py-2 bg-[#ED1C24] text-white text-sm rounded-md hover:bg-opacity-90"
+                        className="px-3 py-2 bg-[#fdc300] text-white text-sm rounded-md hover:bg-opacity-90"
                       >
                         Adicionar endereço de entrega
                       </button>
@@ -745,7 +745,7 @@ export default function Carrinho() {
           <button
             onClick={handleCheckout}
             disabled={produtos.length === 0 || Object.keys(revendedorSelecionado).length !== produtos.length}
-            className="w-full bg-[#ED1C24] text-white py-4 rounded-full font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-[#fdc300] text-white py-4 rounded-full font-bold disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {totalQuantity < 50
               ? `Adicione mais ${50 - totalQuantity} unidades (mín. 50)`

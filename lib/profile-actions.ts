@@ -16,9 +16,9 @@ export async function updateProfileImage({
   fileName,
 }: UpdateProfileImageParams) {
   try {
-    // <-- Cole aqui direto a URL e a Service Role Key do seu projeto Supabase -->
-    const SUPABASE_URL = "https://lqiabcgdtnadggjswbmr.supabase.co"
-    const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxaWFiY2dkdG5hZGdnanN3Ym1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwNTM2NTksImV4cCI6MjA2MjYyOTY1OX0.6_FBwdlkA2bVS0-lJwn3twyLNmqk_QFZdUpwilyA-ac"
+    // Use as credenciais do novo projeto Supabase
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://djqueobbsqebtfnqysmt.supabase.co"
+    const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqcXVlb2Jic3FlYnRmbnF5c210Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MjIyNzQsImV4cCI6MjA2OTE5ODI3NH0.8bUtQl__vruvkxUFcMEWB9IGNU8eZmDQEnDOs9J8i30"
 
     // Cria o client com permissão total (ignora RLS/roles)
     const supabase = createClient(

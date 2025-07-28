@@ -236,25 +236,26 @@ export default function Cadastro() {
         return
       }
 
-      // Set a client-side cookie as a backup
-      if (data?.user?.id) {
-        setCookie("userId", data.user.id.toString())
-      }
+      // Debug: verificar o que foi retornado
+      console.log("Dados retornados do cadastro:", data)
+      console.log("User ID:", data?.user?.id)
 
       // Set redirecting state to show feedback
       setRedirecting(true)
 
-      // Wait a moment to ensure cookies are set
-      setTimeout(() => {
-        // Check if we have the cookie before redirecting
-        if (getCookie("userId")) {
-          console.log("Cookie set successfully, redirecting to dashboard")
-          window.location.href = "/dashboard"
-        } else {
-          console.error("Cookie not set after registration")
-          alert("Erro ao criar conta: Cookie não foi definido")
-        }
-      }, 500)
+      // Se o cadastro foi bem sucedido, redirecionar
+      if (data?.user?.id) {
+        console.log("Cadastro realizado com sucesso! Redirecionando...")
+        
+        // Usar router.push ao invés de window.location.href para manter o estado
+        setTimeout(() => {
+          router.push("/dashboard")
+        }, 500)
+      } else {
+        console.error("User ID não encontrado nos dados:", data)
+        alert("Cadastro realizado, mas houve um erro ao fazer login automático. Por favor, faça login manualmente.")
+        router.push("/login")
+      }
     } catch (error) {
       console.error("Erro ao cadastrar:", error)
       alert("Ocorreu um erro ao criar sua conta. Tente novamente.")

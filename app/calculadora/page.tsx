@@ -377,13 +377,13 @@ export default function Calculadora() {
         </button>
       </form>
 
-      {/* Links de rodapé */}
-      <div className="flex justify-between w-full max-w-md mt-8">
-        <Link href="/login" className="text-white underline">
+      {/* Botão de Login */}
+      <div className="w-full max-w-md mt-8">
+        <Link
+          href="/login"
+          className="w-full border border-[#fdc300] rounded-full py-4 font-barlow font-bold text-[20px] leading-[100%] text-white text-center bg-transparent block"
+        >
           Login
-        </Link>
-        <Link href="/cadastro" className="text-white underline">
-          Cadastre-se
         </Link>
       </div>
     </main>

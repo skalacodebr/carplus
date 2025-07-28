@@ -508,27 +508,61 @@ export async function getAlturasByTamanhoId(tamanhoId: string) {
     .eq("tamanho_id", tamanhoId)
     .order("valor", { ascending: true })
 
+  // Remover duplicatas baseado no valor
+  if (data && data.length > 0) {
+    const uniqueAlturas = data.reduce((acc: any[], current) => {
+      const exists = acc.find(item => item.valor === current.valor)
+      if (!exists) {
+        acc.push(current)
+      }
+      return acc
+    }, [])
+    
+    return { data: uniqueAlturas, error }
+  }
+
   return { data, error }
 }
 
 // Função para buscar larguras based on altura_id
 export async function getLargurasByAlturaId(alturaId: string) {
+  console.log("🔍 Buscando larguras para alturaId:", alturaId)
+  
   const { data, error } = await supabase
     .from("larguras")
     .select("id, valor")
     .eq("altura_id", alturaId)
     .order("valor", { ascending: true })
 
+  // Remover duplicatas baseado no valor
+  if (data && data.length > 0) {
+    const uniqueLarguras = data.reduce((acc: any[], current) => {
+      const exists = acc.find(item => item.valor === current.valor)
+      if (!exists) {
+        acc.push(current)
+      }
+      return acc
+    }, [])
+    
+    console.log("📏 Larguras únicas encontradas:", { data: uniqueLarguras, error })
+    return { data: uniqueLarguras, error }
+  }
+
+  console.log("📏 Larguras encontradas:", { data, error })
   return { data, error }
 }
 
 // Função para buscar package details by largura_id
 export async function getPacoteByLarguraId(larguraId: string) {
   try {
-    const { data, error } = await supabase.from("pacotes").select("id, nome, cor").eq("largura_id", larguraId).single()
+    console.log("🔍 Buscando pacote para larguraId:", larguraId)
+    
+    const { data, error } = await supabase.from("pacotes").select("*").eq("largura_id", larguraId).single()
 
+    console.log("📦 Resultado da busca:", { data, error })
+    
     if (error) {
-      console.error("Erro ao buscar pacote por largura_id:", error)
+      console.error("❌ Erro ao buscar pacote por largura_id:", error)
       // Fallback: retornar um pacote padrão
       return {
         data: {
@@ -553,7 +587,14 @@ export async function getPacoteByLarguraId(larguraId: string) {
       }
     }
 
-    return { data, error: null }
+    // Ajustar dados se nome estiver null
+    const pacoteAjustado = {
+      id: data.id,
+      nome: data.nome || data.descricao || "LTP60",
+      cor: data.cor || "#949698" // Cor padrão baseada nos dados existentes
+    }
+
+    return { data: pacoteAjustado, error: null }
   } catch (error) {
     console.error("Erro ao buscar pacote:", error)
     // Fallback: retornar um pacote padrão
@@ -663,6 +704,38 @@ export async function limparCarrinhoUsuario(userId: string) {
   const { data, error } = await supabase.from("carrinho_usuarios").delete().eq("user_id", userId)
 
   return { data, error }
+}
+
+// Atualizar carrinho completo do usuário
+export async function atualizarCarrinhoUsuario(userId: string, items: any[]) {
+  try {
+    // Primeiro, limpar o carrinho atual
+    await limparCarrinhoUsuario(userId)
+    
+    // Se não há itens, apenas retornar sucesso
+    if (!items || items.length === 0) {
+      return { data: null, error: null }
+    }
+    
+    // Inserir todos os novos itens
+    const itensParaInserir = items.map(item => ({
+      user_id: userId,
+      produto_nome: item.nome,
+      quantidade: item.quantidade,
+      imagem: item.imagem,
+      created_at: new Date().toISOString()
+    }))
+    
+    const { data, error } = await supabase
+      .from("carrinho_usuarios")
+      .insert(itensParaInserir)
+      .select()
+    
+    return { data, error }
+  } catch (error) {
+    console.error("Erro ao atualizar carrinho:", error)
+    return { data: null, error }
+  }
 }
 
 // ==================== FUNÇÕES DE REVENDEDORES E ESTOQUE ====================

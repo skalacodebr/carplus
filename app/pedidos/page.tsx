@@ -227,7 +227,7 @@ export default function Historico() {
             <p className="text-gray-400 mb-6">Faça seu primeiro pedido agora mesmo!</p>
             <button
               onClick={() => router.push("/")}
-              className="bg-[#ED1C24] text-white px-6 py-3 rounded-full font-medium"
+              className="bg-[#fdc300] text-white px-6 py-3 rounded-full font-medium"
             >
               Fazer pedido
             </button>
@@ -320,7 +320,7 @@ export default function Historico() {
                   <span className="font-bold text-lg">Total: R$ {pedido.valor_total.toFixed(2)}</span>
                   <button
                     onClick={() => router.push(`/pedidos/${pedido.id}`)}
-                    className="text-[#ED1C24] text-sm font-medium hover:underline"
+                    className="text-[#fdc300] text-sm font-medium hover:underline"
                   >
                     Ver detalhes →
                   </button>

@@ -481,7 +481,7 @@ export default function Perfil() {
               />
               {isFetchingCep && (
                 <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                  <div className="w-5 h-5 border-t-2 border-[#ED1C24] border-solid rounded-full animate-spin"></div>
+                  <div className="w-5 h-5 border-t-2 border-[#fdc300] border-solid rounded-full animate-spin"></div>
                 </div>
               )}
             </div>
@@ -582,7 +582,7 @@ export default function Perfil() {
         )}
 
         {updateError && (
-          <div className="mt-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded-lg text-red-300">
+          <div className="mt-4 p-3 bg-yellow-500 bg-opacity-20 border border-yellow-500 rounded-lg text-yellow-300">
             {updateError}
           </div>
         )}
@@ -592,7 +592,7 @@ export default function Perfil() {
             <>
               <button
                 type="submit"
-                className="w-full bg-[#ED1C24] text-white py-3 rounded-full font-bold flex justify-center items-center"
+                className="w-full bg-[#fdc300] text-white py-3 rounded-full font-bold flex justify-center items-center"
                 disabled={isUpdating}
               >
                 {isUpdating ? (
@@ -636,7 +636,7 @@ export default function Perfil() {
             <button
               type="button"
               onClick={() => setIsEditing(true)}
-              className="w-full bg-[#ED1C24] text-white py-3 rounded-full font-bold"
+              className="w-full bg-[#fdc300] text-white py-3 rounded-full font-bold"
             >
               Editar Perfil
             </button>
@@ -645,7 +645,7 @@ export default function Perfil() {
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full bg-transparent border border-[#ED1C24] text-[#ED1C24] py-3 rounded-full font-bold"
+            className="w-full bg-transparent border border-[#fdc300] text-[#fdc300] py-3 rounded-full font-bold"
           >
             Sair da Conta
           </button>
@@ -671,7 +671,7 @@ export default function Perfil() {
           </svg>
           <span className="text-xs mt-1">Início</span>
         </Link>
-        <Link href="/historico" className="flex flex-col items-center text-gray-400">
+        <Link href="/pedidos" className="flex flex-col items-center text-gray-400">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-6 w-6"
@@ -683,10 +683,10 @@ export default function Perfil() {
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
             />
           </svg>
-          <span className="text-xs mt-1">Histórico</span>
+          <span className="text-xs mt-1">Pedidos</span>
         </Link>
         <Link href="/perfil" className="flex flex-col items-center text-white">
           <svg

@@ -82,20 +82,10 @@ export default function Resultado() {
         {/* Espaçador para compensar o posicionamento absoluto */}
         <div className="h-24"></div>
 
-        {/* Botão de cadastro */}
-        <Link href="/cadastro" className="w-full bg-[#ED1C24] text-white py-4 rounded-full font-bold mt-4 text-center">
-          Cadastre-se
+        {/* Botão de recalcular */}
+        <Link href="/calculadora" className="w-full bg-[#fdc300] text-white py-4 rounded-full font-bold mt-4 text-center">
+          Recalcular
         </Link>
-
-        {/* Link para login */}
-        <div className="text-center mt-4">
-          <p className="text-white text-sm">
-            Já tem uma conta?{" "}
-            <Link href="/login" className="underline">
-              Entre aqui
-            </Link>
-          </p>
-        </div>
       </div>
     </main>
   )

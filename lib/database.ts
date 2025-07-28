@@ -473,7 +473,7 @@ export async function getPedidosCliente(userId: string) {
           pacote_id,
           qtd,
           valor_unitario,
-          pacotes:pacotes(id, nome, cor, imagem)
+          pacotes:pacotes(id, descricao, cor, imagem)
         )
       `)
       .eq("cliente_id", clienteId) // Corrigido: cliente_id em vez de client_id

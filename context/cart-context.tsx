@@ -45,7 +45,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           if (data && data.length > 0) {
             const cartItems = data.map((item: any) => ({
               id: item.id.toString(),
-              nome: item.produto,
+              nome: item.produto_nome,
               quantidade: item.quantidade,
               preco: item.preco,
               imagem: item.imagem,

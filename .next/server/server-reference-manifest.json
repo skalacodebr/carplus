@@ -2,15 +2,11 @@
   "node": {
     "001c755f26270020e478acb933baf0b6cae888080e": {
       "workers": {
-        "app/page": {
+        "app/carrinho/page": {
           "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
           "async": false
         },
         "app/_not-found/page": {
-          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
-          "async": false
-        },
-        "app/login/page": {
           "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
           "async": false
         },
@@ -21,32 +17,22 @@
         "app/pedidos/page": {
           "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
           "async": false
-        },
-        "app/carrinho/page": {
-          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
-          "async": false
         }
       },
       "layer": {
-        "app/page": "action-browser",
+        "app/carrinho/page": "action-browser",
         "app/_not-found/page": "action-browser",
-        "app/login/page": "action-browser",
         "app/dashboard/page": "action-browser",
-        "app/pedidos/page": "action-browser",
-        "app/carrinho/page": "action-browser"
+        "app/pedidos/page": "action-browser"
       }
     },
     "008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0": {
       "workers": {
-        "app/page": {
+        "app/carrinho/page": {
           "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
           "async": false
         },
         "app/_not-found/page": {
-          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
-          "async": false
-        },
-        "app/login/page": {
           "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
           "async": false
         },
@@ -57,32 +43,22 @@
         "app/pedidos/page": {
           "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
           "async": false
-        },
-        "app/carrinho/page": {
-          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
-          "async": false
         }
       },
       "layer": {
-        "app/page": "action-browser",
+        "app/carrinho/page": "action-browser",
         "app/_not-found/page": "action-browser",
-        "app/login/page": "action-browser",
         "app/dashboard/page": "action-browser",
-        "app/pedidos/page": "action-browser",
-        "app/carrinho/page": "action-browser"
+        "app/pedidos/page": "action-browser"
       }
     },
     "40c737280d509b5ffb8e22cc8ce00bda51a48b33ab": {
       "workers": {
-        "app/page": {
+        "app/carrinho/page": {
           "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
           "async": false
         },
         "app/_not-found/page": {
-          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
-          "async": false
-        },
-        "app/login/page": {
           "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
           "async": false
         },
@@ -93,32 +69,22 @@
         "app/pedidos/page": {
           "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
           "async": false
-        },
-        "app/carrinho/page": {
-          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
-          "async": false
         }
       },
       "layer": {
-        "app/page": "action-browser",
+        "app/carrinho/page": "action-browser",
         "app/_not-found/page": "action-browser",
-        "app/login/page": "action-browser",
         "app/dashboard/page": "action-browser",
-        "app/pedidos/page": "action-browser",
-        "app/carrinho/page": "action-browser"
+        "app/pedidos/page": "action-browser"
       }
     },
     "60c43f15408dcbeda6afa1e16bb46d67d3d7d07817": {
       "workers": {
-        "app/page": {
+        "app/carrinho/page": {
           "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
           "async": false
         },
         "app/_not-found/page": {
-          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
-          "async": false
-        },
-        "app/login/page": {
           "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
           "async": false
         },
@@ -129,32 +95,22 @@
         "app/pedidos/page": {
           "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
           "async": false
-        },
-        "app/carrinho/page": {
-          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
-          "async": false
         }
       },
       "layer": {
-        "app/page": "action-browser",
+        "app/carrinho/page": "action-browser",
         "app/_not-found/page": "action-browser",
-        "app/login/page": "action-browser",
         "app/dashboard/page": "action-browser",
-        "app/pedidos/page": "action-browser",
-        "app/carrinho/page": "action-browser"
+        "app/pedidos/page": "action-browser"
       }
     },
     "70cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b": {
       "workers": {
-        "app/page": {
+        "app/carrinho/page": {
           "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
           "async": false
         },
         "app/_not-found/page": {
-          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
-          "async": false
-        },
-        "app/login/page": {
           "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
           "async": false
         },
@@ -165,19 +121,13 @@
         "app/pedidos/page": {
           "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
           "async": false
-        },
-        "app/carrinho/page": {
-          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fguibadermann%2FDocuments%2FGitHub%2Fcarplus%2Flib%2Fauth-actions.ts%22%2C%5B%7B%22id%22%3A%22001c755f26270020e478acb933baf0b6cae888080e%22%2C%22exportedName%22%3A%22serverSignOut%22%7D%2C%7B%22id%22%3A%22008dd7325c142169c1b9ca3df0384e0feaf0f9bbb0%22%2C%22exportedName%22%3A%22serverGetCurrentUser%22%7D%2C%7B%22id%22%3A%2240c737280d509b5ffb8e22cc8ce00bda51a48b33ab%22%2C%22exportedName%22%3A%22serverResetPassword%22%7D%2C%7B%22id%22%3A%2260c43f15408dcbeda6afa1e16bb46d67d3d7d07817%22%2C%22exportedName%22%3A%22serverSignIn%22%7D%2C%7B%22id%22%3A%2270cde8e1eb1ee8af4e0ad4afc871b791c65a9cc70b%22%2C%22exportedName%22%3A%22serverSignUp%22%7D%5D%5D%5D&__client_imported__=true!",
-          "async": false
         }
       },
       "layer": {
-        "app/page": "action-browser",
+        "app/carrinho/page": "action-browser",
         "app/_not-found/page": "action-browser",
-        "app/login/page": "action-browser",
         "app/dashboard/page": "action-browser",
-        "app/pedidos/page": "action-browser",
-        "app/carrinho/page": "action-browser"
+        "app/pedidos/page": "action-browser"
       }
     }
   },

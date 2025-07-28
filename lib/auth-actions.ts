@@ -131,11 +131,11 @@ export async function serverSignIn(email: string, password: string) {
     console.log("User authenticated successfully with ID:", user.id)
 
     // Set the user ID cookie
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     cookieStore.set({
       name: "userId",
       value: user.id.toString(), // Convert to string to ensure compatibility
-      httpOnly: true,
+      httpOnly: false, // Allow client-side access for isAuthenticated check
       secure: process.env.NODE_ENV === "production",
       maxAge: 30 * 24 * 60 * 60, // 30 days
       path: "/",

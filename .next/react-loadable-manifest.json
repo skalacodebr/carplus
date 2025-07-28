@@ -1,8 +1,4 @@
 {
-  "app/carrinho/page.tsx -> @/lib/database": {
-    "id": "app/carrinho/page.tsx -> @/lib/database",
-    "files": []
-  },
   "app/dashboard/page.tsx -> @/lib/database": {
     "id": "app/dashboard/page.tsx -> @/lib/database",
     "files": [
@@ -13,6 +9,12 @@
     "id": "app/dashboard/page.tsx -> @/lib/supabase",
     "files": [
       "static/chunks/_app-pages-browser_lib_supabase_ts.js"
+    ]
+  },
+  "app/login/page.tsx -> @/lib/auth": {
+    "id": "app/login/page.tsx -> @/lib/auth",
+    "files": [
+      "static/chunks/_app-pages-browser_lib_auth_ts.js"
     ]
   },
   "context/cart-context.tsx -> @/lib/database": {

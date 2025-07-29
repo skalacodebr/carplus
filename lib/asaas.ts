@@ -60,7 +60,6 @@ export interface AsaasPayment {
     mobilePhone?: string
   }
   remoteIp?: string
-  split?: any[]
 }
 
 export interface AsaasPixQrCode {
@@ -75,7 +74,7 @@ async function asaasRequest(endpoint: string, method = "POST", data?: any) {
     const response = await fetch("/api/asaas/proxy", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ endpoint, method, data }), // <-- mantemos data agrupado
+      body: JSON.stringify({ endpoint, method, data }),
     });
 
     const responseData = await response.json();
@@ -99,9 +98,11 @@ export async function createOrUpdateCustomer(customerData: AsaasCustomer): Promi
     if (searchResult.data && searchResult.data.length > 0) {
       // Cliente já existe, atualizar
       const existingCustomer = searchResult.data[0]
+      console.log("Cliente encontrado:", existingCustomer)
       return await asaasRequest(`/customers/${existingCustomer.id}`, "PUT", customerData)
     } else {
       // Cliente não existe, criar
+      console.log("Cliente não encontrado, criando...")
       return await asaasRequest("/customers", "POST", customerData)
     }
   } catch (error) {
@@ -123,7 +124,7 @@ export async function createPayment(paymentData: AsaasPayment): Promise<any> {
 // Obter QR Code PIX
 export async function getPixQrCode(paymentId: string): Promise<AsaasPixQrCode> {
   try {
-    return await asaasRequest(`/payments/${paymentId}/pixQrCode`)
+    return await asaasRequest(`/payments/${paymentId}/billingInfo`, "GET", null)
   } catch (error) {
     console.error("Erro ao obter QR Code PIX:", error)
     throw error

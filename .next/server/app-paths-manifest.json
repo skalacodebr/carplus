@@ -1,9 +1,8 @@
 {
-  "/api/asaas/proxy/route": "app/api/asaas/proxy/route.js",
   "/_not-found/page": "app/_not-found/page.js",
-  "/page": "app/page.js",
   "/login/page": "app/login/page.js",
+  "/page": "app/page.js",
+  "/pedidos/page": "app/pedidos/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/carrinho/page": "app/carrinho/page.js",
-  "/pedidos/page": "app/pedidos/page.js"
+  "/carrinho/page": "app/carrinho/page.js"
 }

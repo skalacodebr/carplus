@@ -1,17 +1,24 @@
-import { supabase } from "./supabase"
-import { createPayment, createOrUpdateCustomer } from "@/lib/asaas";
+import { supabase } from "./supabase";
+import { createPayment, createOrUpdateCustomer, getPixQrCode } from "@/lib/asaas";
 
 // Funções para produtos
 export async function getProdutos() {
-  const { data, error } = await supabase.from("produtos").select("*").order("created_at", { ascending: false })
+  const { data, error } = await supabase
+    .from("produtos")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-  return { data, error }
+  return { data, error };
 }
 
 export async function getProduto(id: string) {
-  const { data, error } = await supabase.from("produtos").select("*").eq("id", id).single()
+  const { data, error } = await supabase
+    .from("produtos")
+    .select("*")
+    .eq("id", id)
+    .single();
 
-  return { data, error }
+  return { data, error };
 }
 
 // Funções para cálculos
@@ -20,7 +27,7 @@ export async function salvarCalculo(
   altura: string,
   largura: string,
   resultado: string,
-  cor: string,
+  cor: string
 ) {
   const { data, error } = await supabase
     .from("calculos")
@@ -33,9 +40,9 @@ export async function salvarCalculo(
         cor: cor,
       },
     ])
-    .select()
+    .select();
 
-  return { data, error }
+  return { data, error };
 }
 
 // Nova função para salvar cálculos do usuário com limite de 10
@@ -44,7 +51,7 @@ export async function salvarCalculoUsuario(
   tamanho: string,
   altura: string,
   largura: string,
-  pacote: string,
+  pacote: string
 ) {
   try {
     // 1. Verificar quantos cálculos o usuário já tem
@@ -52,21 +59,24 @@ export async function salvarCalculoUsuario(
       .from("calculo_usuarios")
       .select("id, created_at")
       .eq("userid", userId)
-      .order("created_at", { ascending: true })
+      .order("created_at", { ascending: true });
 
     if (contarError) {
-      console.error("Erro ao contar cálculos do usuário:", contarError)
-      return { data: null, error: contarError }
+      console.error("Erro ao contar cálculos do usuário:", contarError);
+      return { data: null, error: contarError };
     }
 
     // 2. Se já tiver 10 ou mais, excluir o mais antigo
     if (calculos && calculos.length >= 10) {
-      const calculoMaisAntigo = calculos[0]
-      const { error: deleteError } = await supabase.from("calculo_usuarios").delete().eq("id", calculoMaisAntigo.id)
+      const calculoMaisAntigo = calculos[0];
+      const { error: deleteError } = await supabase
+        .from("calculo_usuarios")
+        .delete()
+        .eq("id", calculoMaisAntigo.id);
 
       if (deleteError) {
-        console.error("Erro ao excluir cálculo mais antigo:", deleteError)
-        return { data: null, error: deleteError }
+        console.error("Erro ao excluir cálculo mais antigo:", deleteError);
+        return { data: null, error: deleteError };
       }
     }
 
@@ -83,17 +93,17 @@ export async function salvarCalculoUsuario(
           created_at: new Date(),
         },
       ])
-      .select()
+      .select();
 
     if (error) {
-      console.error("Erro ao salvar cálculo do usuário:", error)
-      return { data: null, error }
+      console.error("Erro ao salvar cálculo do usuário:", error);
+      return { data: null, error };
     }
 
-    return { data, error: null }
+    return { data, error: null };
   } catch (error) {
-    console.error("Erro ao salvar cálculo do usuário:", error)
-    return { data: null, error }
+    console.error("Erro ao salvar cálculo do usuário:", error);
+    return { data: null, error };
   }
 }
 
@@ -103,9 +113,9 @@ export async function getCalculosUsuario(userId: string) {
     .from("calculo_usuarios")
     .select("*")
     .eq("userid", userId)
-    .order("created_at", { ascending: false })
+    .order("created_at", { ascending: false });
 
-  return { data, error }
+  return { data, error };
 }
 
 export async function getCalculos(userId: string) {
@@ -113,9 +123,9 @@ export async function getCalculos(userId: string) {
     .from("calculos")
     .select("*")
     .eq("user_id", userId)
-    .order("created_at", { ascending: false })
+    .order("created_at", { ascending: false });
 
-  return { data, error }
+  return { data, error };
 }
 
 // Funções para pedidos
@@ -125,7 +135,7 @@ export async function criarPedido(
   total: number,
   tipoEntrega = "retirada",
   metodoPagamento = "cartao",
-  dadosAdicionais: any = {},
+  dadosAdicionais: any = {}
 ) {
   try {
     // Criar o pedido
@@ -142,9 +152,9 @@ export async function criarPedido(
         },
       ])
       .select()
-      .single()
+      .single();
 
-    if (pedidoError) throw pedidoError
+    if (pedidoError) throw pedidoError;
 
     // Inserir os itens do pedido
     const itens = items.map((item) => ({
@@ -153,16 +163,18 @@ export async function criarPedido(
       quantidade: item.quantidade,
       preco_unitario: item.preco,
       revendedor_id: item.revendedor_id,
-    }))
+    }));
 
-    const { error: itensError } = await supabase.from("itens_pedido").insert(itens)
+    const { error: itensError } = await supabase
+      .from("itens_pedido")
+      .insert(itens);
 
-    if (itensError) throw itensError
+    if (itensError) throw itensError;
 
-    return { data: pedido, error: null }
+    return { data: pedido, error: null };
   } catch (error) {
-    console.error("Erro ao criar pedido:", error)
-    return { data: null, error }
+    console.error("Erro ao criar pedido:", error);
+    return { data: null, error };
   }
 }
 
@@ -180,11 +192,11 @@ export async function getPacoteByProdutoNome(produtoNome: string) {
       "Microesferas Amarela": 4,
       "Microesferas Preta": 5,
       "Microesferas Branca": 6,
-    }
+    };
 
     // Se existe um mapeamento direto, usar ele
     if (mapeamentoProdutos[produtoNome]) {
-      return { data: mapeamentoProdutos[produtoNome], error: null }
+      return { data: mapeamentoProdutos[produtoNome], error: null };
     }
 
     // Caso contrário, tentar buscar por nome similar
@@ -192,55 +204,58 @@ export async function getPacoteByProdutoNome(produtoNome: string) {
       .from("pacotes")
       .select("id, nome, cor")
       .ilike("nome", `%${produtoNome}%`)
-      .limit(1)
+      .limit(1);
 
     if (error) {
-      console.error("Erro ao buscar pacote por nome:", error)
-      return { data: 1, error: null } // Fallback para ID 1
+      console.error("Erro ao buscar pacote por nome:", error);
+      return { data: 1, error: null }; // Fallback para ID 1
     }
 
     if (pacotes && pacotes.length > 0) {
-      return { data: pacotes[0].id, error: null }
+      return { data: pacotes[0].id, error: null };
     }
 
     // Se não encontrou nada, tentar buscar por cor
-    const cores = ["azul", "vermelha", "verde", "amarela", "preta", "branca"]
+    const cores = ["azul", "vermelha", "verde", "amarela", "preta", "branca"];
     for (const cor of cores) {
       if (produtoNome.toLowerCase().includes(cor)) {
         const { data: pacotePorCor, error: errorCor } = await supabase
           .from("pacotes")
           .select("id")
           .ilike("cor", `%${cor}%`)
-          .limit(1)
+          .limit(1);
 
         if (!errorCor && pacotePorCor && pacotePorCor.length > 0) {
-          return { data: pacotePorCor[0].id, error: null }
+          return { data: pacotePorCor[0].id, error: null };
         }
       }
     }
 
     // Fallback final
-    return { data: 1, error: null }
+    return { data: 1, error: null };
   } catch (error) {
-    console.error("Erro ao buscar pacote:", error)
-    return { data: 1, error: null }
+    console.error("Erro ao buscar pacote:", error);
+    return { data: 1, error: null };
   }
 }
 
 // Função para buscar um pacote válido (por enquanto retorna o primeiro disponível)
 export async function getPacoteValido() {
   try {
-    const { data: pacotes, error } = await supabase.from("pacotes").select("id").limit(1)
+    const { data: pacotes, error } = await supabase
+      .from("pacotes")
+      .select("id")
+      .limit(1);
 
     if (error) {
-      console.error("Erro ao buscar pacote:", error)
-      return 1 // Fallback para ID 1
+      console.error("Erro ao buscar pacote:", error);
+      return 1; // Fallback para ID 1
     }
 
-    return pacotes && pacotes.length > 0 ? pacotes[0].id : 1
+    return pacotes && pacotes.length > 0 ? pacotes[0].id : 1;
   } catch (error) {
-    console.error("Erro ao buscar pacote:", error)
-    return 1 // Fallback para ID 1
+    console.error("Erro ao buscar pacote:", error);
+    return 1; // Fallback para ID 1
   }
 }
 
@@ -250,7 +265,7 @@ export async function registrarMudancaStatus(
   statusAnterior: string | null,
   statusNovo: string,
   observacao?: string,
-  updatedBy?: number,
+  updatedBy?: number
 ) {
   try {
     const { data, error } = await supabase
@@ -264,16 +279,16 @@ export async function registrarMudancaStatus(
           updated_by: updatedBy,
         },
       ])
-      .select()
+      .select();
 
     if (error) {
-      console.error("Erro ao registrar mudança de status:", error)
+      console.error("Erro ao registrar mudança de status:", error);
     }
 
-    return { data, error }
+    return { data, error };
   } catch (error) {
-    console.error("Erro ao registrar mudança de status:", error)
-    return { data: null, error }
+    console.error("Erro ao registrar mudança de status:", error);
+    return { data: null, error };
   }
 }
 
@@ -285,30 +300,46 @@ export async function criarPedidoNovo(
   valorTotal: number,
   frete: number,
   tipoEntrega: string,
-  metodoPagamento: string,
+  metodoPagamento: string
 ) {
   try {
-    console.log("Iniciando criação do pedido para usuário:", userId)
+    console.log("Iniciando criação do pedido para usuário:", userId);
+    console.log("Revendedor ID:", revendedorId);
+    console.log("Items:", items);
+    console.log("Valor Total:", valorTotal);
+    console.log("Frete:", frete);
+    console.log("Tipo de Entrega:", tipoEntrega);
+    console.log("Método de Pagamento:", metodoPagamento);
 
     // Converter userId para número
-    const clienteId = Number.parseInt(userId)
+    const clienteId = Number.parseInt(userId);
 
     // Buscar o usuario_id do revendedor baseado no revendedor_id
-    const { data: revendedorUsuarioId, error: revendedorError } = await getUsuarioIdRevendedor(revendedorId)
+    const { data: revendedorUsuarioId, error: revendedorError } =
+      await getUsuarioIdRevendedor(revendedorId);
 
     if (revendedorError || !revendedorUsuarioId) {
-      throw new Error("Erro ao buscar revendedor: " + (revendedorError?.message || "Revendedor não encontrado"))
+      throw new Error(
+        "Erro ao buscar revendedor: " +
+          (revendedorError?.message || "Revendedor não encontrado")
+      );
     }
 
-    console.log("Cliente ID:", clienteId)
-    console.log("Revendedor ID:", revendedorId)
-    console.log("Revendedor Usuario ID:", revendedorUsuarioId)
+    console.log("Cliente ID:", clienteId);
+    console.log("Revendedor ID:", revendedorId);
+    console.log("Revendedor Usuario ID:", revendedorUsuarioId);
 
     // Gerar número do pedido único
-    const numeroPedido = `PED-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`
+    const numeroPedido = `PED-${Date.now()}-${Math.random()
+      .toString(36)
+      .substr(2, 4)
+      .toUpperCase()}`;
 
     // Definir status inicial baseado no tipo de entrega
-    const statusInicial = tipoEntrega === "retirada" ? "aguardando_preparacao" : "aguardando_aceite"
+    const statusInicial =
+      tipoEntrega === "retirada"
+        ? "aguardando_preparacao"
+        : "aguardando_aceite";
 
     // Criar o pedido usando o schema correto
     const { data: pedido, error: pedidoError } = await supabase
@@ -329,26 +360,31 @@ export async function criarPedidoNovo(
         },
       ])
       .select()
-      .single()
+      .single();
 
     if (pedidoError) {
-      console.error("Erro ao criar pedido:", pedidoError)
-      throw pedidoError
+      console.error("Erro ao criar pedido:", pedidoError);
+      throw pedidoError;
     }
 
-    const user = await getUserInfo(clienteId.toString())
-    console.log("User:", user)
+    const user = await getUserInfo(clienteId.toString());
+    console.log("User:", user);
 
     if (!user.data) {
-      throw new Error("Usuário não encontrado")
+      throw new Error("Usuário não encontrado");
     }
 
-    if (!user.data?.nome || !user.data?.email || !user.data?.telefone || !user.data?.cpf ) {
-      throw new Error("Dados do usuário incompletos")
+    if (
+      !user.data?.nome ||
+      !user.data?.email ||
+      !user.data?.telefone ||
+      !user.data?.cpf
+    ) {
+      throw new Error("Dados do usuário incompletos");
     }
 
     const cliente = await createOrUpdateCustomer({
-      name: user.data?.nome,
+      name: user.data?.nome + " " + user.data?.sobrenome,
       email: user.data?.email,
       phone: user.data?.telefone,
       mobilePhone: user.data?.telefone,
@@ -361,63 +397,132 @@ export async function criarPedidoNovo(
       city: user.data?.cidade,
       state: user.data?.uf,
       externalReference: user.data?.id.toString(),
-    })
+    });
 
-    console.log("Cliente criado:", cliente)
+    console.log("Cliente criado:", cliente);
 
-    const pagamento = await createPayment({
-      billingType: "PIX",
-      customer: "cus_000006888750",
-      value: 20,
+    const pagamentoData: AsaasPayment = {
+      billingType: metodoPagamento as
+        | "BOLETO"
+        | "CREDIT_CARD"
+        | "PIX"
+        | "UNDEFINED",
+      customer: cliente.id,
+      value: Number(valorTotal) + Number(frete),
       dueDate: "2025-07-29",
       externalReference: pedido.id.toString(),
       description: `Pedido #${pedido.id}`,
-    });
+    };
+
+    if (metodoPagamento === "CREDIT_CARD") {
+      pagamentoData.creditCard = {
+        holderName: user.data.nome + " " + user.data.sobrenome,
+        number: "4111111111111111",
+        expiryMonth: "12",
+        expiryYear: "2025",
+        ccv: "123",
+      };
+      pagamentoData.installmentCount = 1;
+      pagamentoData.totalValue = Number(valorTotal) + Number(frete);
+      pagamentoData.installmentValue = Number(valorTotal) + Number(frete);
+      pagamentoData.discount = {
+        value: 0,
+        dueDateLimitDays: 0,
+        type: "FIXED",
+      };
+      pagamentoData.interest = {
+        value: 0,
+      };
+      pagamentoData.fine = {
+        value: 0,
+      };
+      pagamentoData.creditCardHolderInfo = {
+        name: user.data.nome + " " + user.data.sobrenome,
+        email: user.data.email,
+        cpfCnpj: user.data.cpf,
+        postalCode: user.data.cep,
+        addressNumber: user.data.numero,
+        addressComplement: user.data.complemento || "",
+        phone: user.data.telefone,
+        mobilePhone: user.data.telefone,
+      };
+      pagamentoData.remoteIp = "127.0.0.1";
+    }
+
+    const pagamento = await createPayment(pagamentoData);
 
     console.log("Pagamento criado:", pagamento);
 
+    if (!pagamento.id) {
+      throw new Error("Erro ao criar pagamento no Asaas");
+    }
+
+    let dadosPagamento = null;
+    if(metodoPagamento === "PIX" || metodoPagamento === "BOLETO") {
+      dadosPagamento = await getPixQrCode(pagamento.id);
+      console.log("QR Code PIX:", dadosPagamento);
+      
+    }
+
+    let pix = null;
+    let boleto = null;
+
+    if(dadosPagamento) {
+      pix = dadosPagamento.pix;
+      boleto = dadosPagamento.bankSlip;
+    }
+
     // Registrar o status inicial no histórico
-    await registrarMudancaStatus(pedido.id, null, statusInicial, "Pedido criado", null)
+    await registrarMudancaStatus(
+      pedido.id,
+      null,
+      statusInicial,
+      "Pedido criado",
+      null
+    );
 
     // Preparar itens para inserção com pacote_id correto para cada item
     const itensParaInserir = await Promise.all(
       items.map(async (item, index) => {
         // Buscar o pacote_id correto baseado no nome do produto
-        const { data: pacoteId } = await getPacoteByProdutoNome(item.nome)
+        const { data: pacoteId } = await getPacoteByProdutoNome(item.nome);
 
         const itemParaInserir = {
           pedido_id: pedido.id,
           pacote_id: pacoteId,
           qtd: Number(item.quantidade) || 0,
           valor_unitario: Number(item.preco) || 0,
-        }
+        };
 
-        console.log(`Item ${index + 1} preparado:`, itemParaInserir)
-        console.log(`Produto: ${item.nome} -> Pacote ID: ${pacoteId}`)
-        return itemParaInserir
-      }),
-    )
+        console.log(`Item ${index + 1} preparado:`, itemParaInserir);
+        console.log(`Produto: ${item.nome} -> Pacote ID: ${pacoteId}`);
+        return itemParaInserir;
+      })
+    );
 
-    console.log("Todos os itens preparados:", itensParaInserir)
+    console.log("Todos os itens preparados:", itensParaInserir);
 
     // Inserir os itens do pedido
     const { data: itensInseridos, error: itensError } = await supabase
       .from("pedido_itens")
       .insert(itensParaInserir)
-      .select()
+      .select();
 
     if (itensError) {
-      console.error("Erro detalhado ao inserir itens do pedido:", itensError)
-      console.error("Dados que tentamos inserir:", itensParaInserir)
-      throw itensError
+      console.error("Erro detalhado ao inserir itens do pedido:", itensError);
+      console.error("Dados que tentamos inserir:", itensParaInserir);
+      throw itensError;
     }
 
-    console.log("Itens inseridos com sucesso:", itensInseridos)
+    console.log("Itens inseridos com sucesso:", itensInseridos);
+    console.log("Pagamento criado com sucesso:", pix);
+    console.log("Pagamento criado com sucesso:", boleto);
+    console.log("Pagamento criado com sucesso:", pagamento.id);
 
-    return { data: pedido, error: null }
+    return { data: pedido, pix, boleto, pagamentoId: pagamento.id, error: null };
   } catch (error) {
-    console.error("Erro ao criar pedido:", error)
-    return { data: null, error }
+    console.error("Erro ao criar pedido:", error);
+    return { data: null, error };
   }
 }
 
@@ -427,7 +532,7 @@ export async function atualizarStatusPedido(
   novoStatus: string,
   dataEstimada?: string,
   observacoes?: string,
-  updatedBy?: number,
+  updatedBy?: number
 ) {
   try {
     // Primeiro, buscar o status atual
@@ -435,76 +540,89 @@ export async function atualizarStatusPedido(
       .from("pedidos")
       .select("status_detalhado")
       .eq("id", pedidoId)
-      .single()
+      .single();
 
     if (errorBusca) {
-      throw errorBusca
+      throw errorBusca;
     }
 
     // Preparar dados para atualização
     const dadosAtualizacao: any = {
       status_detalhado: novoStatus,
       updated_at: new Date().toISOString(),
-    }
+    };
 
     if (dataEstimada) {
-      dadosAtualizacao.data_estimada_entrega = dataEstimada
+      dadosAtualizacao.data_estimada_entrega = dataEstimada;
     }
 
     if (observacoes) {
-      dadosAtualizacao.observacoes_revendedor = observacoes
+      dadosAtualizacao.observacoes_revendedor = observacoes;
     }
 
     // Se o status for "entregue" ou "retirado", definir data real
     if (novoStatus === "entregue" || novoStatus === "retirado") {
-      dadosAtualizacao.data_entrega_real = new Date().toISOString()
+      dadosAtualizacao.data_entrega_real = new Date().toISOString();
     }
 
     // Atualizar o pedido
-    const { data, error } = await supabase.from("pedidos").update(dadosAtualizacao).eq("id", pedidoId).select()
+    const { data, error } = await supabase
+      .from("pedidos")
+      .update(dadosAtualizacao)
+      .eq("id", pedidoId)
+      .select();
 
     if (error) {
-      throw error
+      throw error;
     }
 
     // Registrar mudança no histórico
-    await registrarMudancaStatus(pedidoId, pedidoAtual.status_detalhado, novoStatus, observacoes, updatedBy)
+    await registrarMudancaStatus(
+      pedidoId,
+      pedidoAtual.status_detalhado,
+      novoStatus,
+      observacoes,
+      updatedBy
+    );
 
-    return { data, error: null }
+    return { data, error: null };
   } catch (error) {
-    console.error("Erro ao atualizar status do pedido:", error)
-    return { data: null, error }
+    console.error("Erro ao atualizar status do pedido:", error);
+    return { data: null, error };
   }
 }
 
 export async function getPedidos(userId: string) {
   const { data, error } = await supabase
     .from("pedidos")
-    .select(`
+    .select(
+      `
       *,
       itens_pedido:itens_pedido(
         *,
         produto:produtos(*)
       )
-    `)
+    `
+    )
     .eq("user_id", userId)
-    .order("created_at", { ascending: false })
+    .order("created_at", { ascending: false });
 
-  return { data, error }
+  return { data, error };
 }
 
 // Substituir a função getPedidosCliente por esta versão corrigida:
 export async function getPedidosCliente(userId: string) {
   try {
-    console.log("Buscando pedidos para usuário:", userId)
+    console.log("Buscando pedidos para usuário:", userId);
 
     // Converter userId para número
-    const clienteId = Number.parseInt(userId)
+    const clienteId = Number.parseInt(userId);
 
     // Buscar pedidos usando o cliente_id diretamente
     const { data: pedidos, error: pedidosError } = await supabase
       .from("pedidos")
-      .select(`
+      .select(
+        `
         *,
         pedido_itens:pedido_itens(
           id,
@@ -514,29 +632,33 @@ export async function getPedidosCliente(userId: string) {
           valor_unitario,
           pacotes:pacotes(id, descricao, cor, imagem)
         )
-      `)
+      `
+      )
       .eq("cliente_id", clienteId) // Corrigido: cliente_id em vez de client_id
-      .order("created_at", { ascending: false })
+      .order("created_at", { ascending: false });
 
-    console.log("Pedidos encontrados:", pedidos?.length || 0)
+    console.log("Pedidos encontrados:", pedidos?.length || 0);
 
     if (pedidosError) {
-      console.error("Erro ao buscar pedidos:", pedidosError)
-      throw pedidosError
+      console.error("Erro ao buscar pedidos:", pedidosError);
+      throw pedidosError;
     }
 
-    return { data: pedidos || [], error: null }
+    return { data: pedidos || [], error: null };
   } catch (error) {
-    console.error("Erro ao buscar pedidos do cliente:", error)
-    return { data: [], error }
+    console.error("Erro ao buscar pedidos do cliente:", error);
+    return { data: [], error };
   }
 }
 
 // Função para buscar tamanhos de rodas disponíveis
 export async function getTamanhos() {
-  const { data, error } = await supabase.from("tamanhos").select("id, nome").order("nome", { ascending: true })
+  const { data, error } = await supabase
+    .from("tamanhos")
+    .select("id, nome")
+    .order("nome", { ascending: true });
 
-  return { data, error }
+  return { data, error };
 }
 
 // Função para buscar alturas disponíveis com base no tamanho da roda
@@ -545,63 +667,70 @@ export async function getAlturasByTamanhoId(tamanhoId: string) {
     .from("alturas")
     .select("id, valor")
     .eq("tamanho_id", tamanhoId)
-    .order("valor", { ascending: true })
+    .order("valor", { ascending: true });
 
   // Remover duplicatas baseado no valor
   if (data && data.length > 0) {
     const uniqueAlturas = data.reduce((acc: any[], current) => {
-      const exists = acc.find(item => item.valor === current.valor)
+      const exists = acc.find((item) => item.valor === current.valor);
       if (!exists) {
-        acc.push(current)
+        acc.push(current);
       }
-      return acc
-    }, [])
-    
-    return { data: uniqueAlturas, error }
+      return acc;
+    }, []);
+
+    return { data: uniqueAlturas, error };
   }
 
-  return { data, error }
+  return { data, error };
 }
 
 // Função para buscar larguras based on altura_id
 export async function getLargurasByAlturaId(alturaId: string) {
-  console.log("🔍 Buscando larguras para alturaId:", alturaId)
-  
+  console.log("🔍 Buscando larguras para alturaId:", alturaId);
+
   const { data, error } = await supabase
     .from("larguras")
     .select("id, valor")
     .eq("altura_id", alturaId)
-    .order("valor", { ascending: true })
+    .order("valor", { ascending: true });
 
   // Remover duplicatas baseado no valor
   if (data && data.length > 0) {
     const uniqueLarguras = data.reduce((acc: any[], current) => {
-      const exists = acc.find(item => item.valor === current.valor)
+      const exists = acc.find((item) => item.valor === current.valor);
       if (!exists) {
-        acc.push(current)
+        acc.push(current);
       }
-      return acc
-    }, [])
-    
-    console.log("📏 Larguras únicas encontradas:", { data: uniqueLarguras, error })
-    return { data: uniqueLarguras, error }
+      return acc;
+    }, []);
+
+    console.log("📏 Larguras únicas encontradas:", {
+      data: uniqueLarguras,
+      error,
+    });
+    return { data: uniqueLarguras, error };
   }
 
-  console.log("📏 Larguras encontradas:", { data, error })
-  return { data, error }
+  console.log("📏 Larguras encontradas:", { data, error });
+  return { data, error };
 }
 
 // Função para buscar package details by largura_id
 export async function getPacoteByLarguraId(larguraId: string) {
   try {
-    console.log("🔍 Buscando pacote para larguraId:", larguraId)
-    
-    const { data, error } = await supabase.from("pacotes").select("*").eq("largura_id", larguraId).single()
+    console.log("🔍 Buscando pacote para larguraId:", larguraId);
 
-    console.log("📦 Resultado da busca:", { data, error })
-    
+    const { data, error } = await supabase
+      .from("pacotes")
+      .select("*")
+      .eq("largura_id", larguraId)
+      .single();
+
+    console.log("📦 Resultado da busca:", { data, error });
+
     if (error) {
-      console.error("❌ Erro ao buscar pacote por largura_id:", error)
+      console.error("❌ Erro ao buscar pacote por largura_id:", error);
       // Fallback: retornar um pacote padrão
       return {
         data: {
@@ -610,11 +739,11 @@ export async function getPacoteByLarguraId(larguraId: string) {
           cor: "#4A4953",
         },
         error: null,
-      }
+      };
     }
 
     if (!data) {
-      console.log("Nenhum pacote encontrado para largura_id:", larguraId)
+      console.log("Nenhum pacote encontrado para largura_id:", larguraId);
       // Fallback: retornar um pacote padrão
       return {
         data: {
@@ -623,19 +752,19 @@ export async function getPacoteByLarguraId(larguraId: string) {
           cor: "#4A4953",
         },
         error: null,
-      }
+      };
     }
 
     // Ajustar dados se nome estiver null
     const pacoteAjustado = {
       id: data.id,
       nome: data.nome || data.descricao || "LTP60",
-      cor: data.cor || "#949698" // Cor padrão baseada nos dados existentes
-    }
+      cor: data.cor || "#949698", // Cor padrão baseada nos dados existentes
+    };
 
-    return { data: pacoteAjustado, error: null }
+    return { data: pacoteAjustado, error: null };
   } catch (error) {
-    console.error("Erro ao buscar pacote:", error)
+    console.error("Erro ao buscar pacote:", error);
     // Fallback: retornar um pacote padrão
     return {
       data: {
@@ -644,7 +773,7 @@ export async function getPacoteByLarguraId(larguraId: string) {
         cor: "#4A4953",
       },
       error: null,
-    }
+    };
   }
 }
 
@@ -656,15 +785,20 @@ export async function getCarrinhoUsuario(userId: string) {
     .from("carrinho_usuarios")
     .select("*")
     .eq("user_id", userId)
-    .order("created_at", { ascending: false })
+    .order("created_at", { ascending: false });
 
-  return { data, error }
+  return { data, error };
 }
 
 // Adicionar item ao carrinho
-export async function adicionarItemCarrinho(userId: string, produtoNome: string, quantidade = 5, imagem?: string) {
+export async function adicionarItemCarrinho(
+  userId: string,
+  produtoNome: string,
+  quantidade = 5,
+  imagem?: string
+) {
   // Ensure quantity is a multiple of 5 and at least 5
-  const adjustedQuantity = Math.max(Math.round(quantidade / 5) * 5, 5)
+  const adjustedQuantity = Math.max(Math.round(quantidade / 5) * 5, 5);
 
   // Verificar se o item já existe no carrinho
   const { data: itemExistente, error: errorBusca } = await supabase
@@ -672,11 +806,11 @@ export async function adicionarItemCarrinho(userId: string, produtoNome: string,
     .select("*")
     .eq("user_id", userId)
     .eq("produto_nome", produtoNome)
-    .single()
+    .single();
 
   if (errorBusca && errorBusca.code !== "PGRST116") {
     // PGRST116 = No rows found (esperado se item não existe)
-    return { data: null, error: errorBusca }
+    return { data: null, error: errorBusca };
   }
 
   if (itemExistente) {
@@ -688,9 +822,9 @@ export async function adicionarItemCarrinho(userId: string, produtoNome: string,
         updated_at: new Date().toISOString(),
       })
       .eq("id", itemExistente.id)
-      .select()
+      .select();
 
-    return { data, error }
+    return { data, error };
   } else {
     // Item não existe, criar novo com quantidade ajustada
     const { data, error } = await supabase
@@ -703,16 +837,20 @@ export async function adicionarItemCarrinho(userId: string, produtoNome: string,
           imagem: imagem,
         },
       ])
-      .select()
+      .select();
 
-    return { data, error }
+    return { data, error };
   }
 }
 
 // Atualizar quantidade de item no carrinho
-export async function atualizarQuantidadeCarrinho(userId: string, produtoNome: string, quantidade: number) {
+export async function atualizarQuantidadeCarrinho(
+  userId: string,
+  produtoNome: string,
+  quantidade: number
+) {
   // Ensure quantity is a multiple of 5 and at least 5
-  const adjustedQuantity = Math.max(Math.round(quantidade / 5) * 5, 5)
+  const adjustedQuantity = Math.max(Math.round(quantidade / 5) * 5, 5);
 
   const { data, error } = await supabase
     .from("carrinho_usuarios")
@@ -722,9 +860,9 @@ export async function atualizarQuantidadeCarrinho(userId: string, produtoNome: s
     })
     .eq("user_id", userId)
     .eq("produto_nome", produtoNome)
-    .select()
+    .select();
 
-  return { data, error }
+  return { data, error };
 }
 
 // Remover item do carrinho
@@ -733,47 +871,50 @@ export async function removerItemCarrinho(userId: string, produtoNome: string) {
     .from("carrinho_usuarios")
     .delete()
     .eq("user_id", userId)
-    .eq("produto_nome", produtoNome)
+    .eq("produto_nome", produtoNome);
 
-  return { data, error }
+  return { data, error };
 }
 
 // Limpar carrinho do usuário
 export async function limparCarrinhoUsuario(userId: string) {
-  const { data, error } = await supabase.from("carrinho_usuarios").delete().eq("user_id", userId)
+  const { data, error } = await supabase
+    .from("carrinho_usuarios")
+    .delete()
+    .eq("user_id", userId);
 
-  return { data, error }
+  return { data, error };
 }
 
 // Atualizar carrinho completo do usuário
 export async function atualizarCarrinhoUsuario(userId: string, items: any[]) {
   try {
     // Primeiro, limpar o carrinho atual
-    await limparCarrinhoUsuario(userId)
-    
+    await limparCarrinhoUsuario(userId);
+
     // Se não há itens, apenas retornar sucesso
     if (!items || items.length === 0) {
-      return { data: null, error: null }
+      return { data: null, error: null };
     }
-    
+
     // Inserir todos os novos itens
-    const itensParaInserir = items.map(item => ({
+    const itensParaInserir = items.map((item) => ({
       user_id: userId,
       produto_nome: item.nome,
       quantidade: item.quantidade,
       imagem: item.imagem,
-      created_at: new Date().toISOString()
-    }))
-    
+      created_at: new Date().toISOString(),
+    }));
+
     const { data, error } = await supabase
       .from("carrinho_usuarios")
       .insert(itensParaInserir)
-      .select()
-    
-    return { data, error }
+      .select();
+
+    return { data, error };
   } catch (error) {
-    console.error("Erro ao atualizar carrinho:", error)
-    return { data: null, error }
+    console.error("Erro ao atualizar carrinho:", error);
+    return { data: null, error };
   }
 }
 
@@ -784,31 +925,34 @@ export async function getRevendedoresComProduto(produtoNome: string) {
   // Usando JOIN manual em vez de relacionamento
   const { data: estoque, error } = await supabase
     .from("revendedor_estoque")
-    .select(`
+    .select(
+      `
       id,
       revendedor_id,
       produto,
       quantidade,
       preco,
       status
-    `)
+    `
+    )
     .eq("produto", produtoNome)
-    .gt("quantidade", 0) // Apenas com estoque disponível
+    .gt("quantidade", 0); // Apenas com estoque disponível
 
   if (error) {
-    return { data: null, error }
+    return { data: null, error };
   }
 
   // Buscar informações dos revendedores
-  const revendedorIds = estoque?.map((item) => item.revendedor_id) || []
+  const revendedorIds = estoque?.map((item) => item.revendedor_id) || [];
 
   if (revendedorIds.length === 0) {
-    return { data: [], error: null }
+    return { data: [], error: null };
   }
 
   const { data: revendedores, error: revendedoresError } = await supabase
     .from("revendedores")
-    .select(`
+    .select(
+      `
       id,
       usuario_id,
       loja,
@@ -817,63 +961,69 @@ export async function getRevendedoresComProduto(produtoNome: string) {
       frete,
       vendas,
       status
-    `)
-    .in("id", revendedorIds)
+    `
+    )
+    .in("id", revendedorIds);
 
   if (revendedoresError) {
-    return { data: null, error: revendedoresError }
+    return { data: null, error: revendedoresError };
   }
 
   // Combinar os dados
   const resultado =
     estoque
       ?.map((item) => {
-        const revendedor = revendedores?.find((r) => r.id === item.revendedor_id)
+        const revendedor = revendedores?.find(
+          (r) => r.id === item.revendedor_id
+        );
         return {
           ...item,
           revendedor: revendedor || null,
-        }
+        };
       })
-      .filter((item) => item.revendedor !== null) || []
+      .filter((item) => item.revendedor !== null) || [];
 
   // Ordenar por preço
-  resultado.sort((a, b) => a.preco - b.preco)
+  resultado.sort((a, b) => a.preco - b.preco);
 
-  return { data: resultado, error: null }
+  return { data: resultado, error: null };
 }
 
 // Buscar revendedores para múltiplos produtos
 export async function getRevendedoresParaProdutos(produtoNomes: string[]) {
-  if (!produtoNomes.length) return { data: {}, error: null }
+  if (!produtoNomes.length) return { data: {}, error: null };
 
   // Buscar todos os produtos de uma vez
   const { data: estoque, error } = await supabase
     .from("revendedor_estoque")
-    .select(`
+    .select(
+      `
       id,
       revendedor_id,
       produto,
       quantidade,
       preco,
       status
-    `)
+    `
+    )
     .in("produto", produtoNomes)
-    .gt("quantidade", 0) // Apenas com estoque disponível
+    .gt("quantidade", 0); // Apenas com estoque disponível
 
   if (error) {
-    return { data: {}, error }
+    return { data: {}, error };
   }
 
   if (!estoque || estoque.length === 0) {
-    return { data: {}, error: null }
+    return { data: {}, error: null };
   }
 
   // Buscar informações dos revendedores
-  const revendedorIds = [...new Set(estoque.map((item) => item.revendedor_id))]
+  const revendedorIds = [...new Set(estoque.map((item) => item.revendedor_id))];
 
   const { data: revendedores, error: revendedoresError } = await supabase
     .from("revendedores")
-    .select(`
+    .select(
+      `
       id,
       usuario_id,
       loja,
@@ -882,58 +1032,67 @@ export async function getRevendedoresParaProdutos(produtoNomes: string[]) {
       frete,
       vendas,
       status
-    `)
-    .in("id", revendedorIds)
+    `
+    )
+    .in("id", revendedorIds);
 
   if (revendedoresError) {
-    return { data: {}, error: revendedoresError }
+    return { data: {}, error: revendedoresError };
   }
 
   // Combinar os dados e agrupar por produto
-  const produtosAgrupados: Record<string, any[]> = {}
+  const produtosAgrupados: Record<string, any[]> = {};
 
   produtoNomes.forEach((produtoNome) => {
     const produtoEstoque = estoque
       .filter((item) => item.produto === produtoNome)
       .map((item) => {
-        const revendedor = revendedores?.find((r) => r.id === item.revendedor_id)
-        return revendedor ? { ...item, revendedor } : null
+        const revendedor = revendedores?.find(
+          (r) => r.id === item.revendedor_id
+        );
+        return revendedor ? { ...item, revendedor } : null;
       })
-      .filter((item) => item !== null)
+      .filter((item) => item !== null);
 
     // Ordenar por preço
-    produtoEstoque.sort((a, b) => a.preco - b.preco)
+    produtoEstoque.sort((a, b) => a.preco - b.preco);
 
-    produtosAgrupados[produtoNome] = produtoEstoque
-  })
+    produtosAgrupados[produtoNome] = produtoEstoque;
+  });
 
-  return { data: produtosAgrupados, error: null }
+  return { data: produtosAgrupados, error: null };
 }
 
 // Buscar informações do usuário
 export async function getUserInfo(userId: string) {
   const { data, error } = await supabase
     .from("usuarios")
-    .select("id, nome, email, cpf, telefone, cidade, uf, cep, rua, bairro, complemento, numero")
+    .select(
+      "id, nome, sobrenome, email, cpf, telefone, cidade, uf, cep, rua, bairro, complemento, numero"
+    )
     .eq("id", userId)
-    .single()
+    .single();
 
-  return { data, error }
+  return { data, error };
 }
 
 // Função para buscar usuario_id do revendedor baseado no revendedor_id
 export async function getUsuarioIdRevendedor(revendedorId: number) {
   try {
-    const { data, error } = await supabase.from("revendedores").select("usuario_id").eq("id", revendedorId).single()
+    const { data, error } = await supabase
+      .from("revendedores")
+      .select("usuario_id")
+      .eq("id", revendedorId)
+      .single();
 
     if (error) {
-      console.error("Erro ao buscar usuario_id do revendedor:", error)
-      return { data: null, error }
+      console.error("Erro ao buscar usuario_id do revendedor:", error);
+      return { data: null, error };
     }
 
-    return { data: data.usuario_id, error: null }
+    return { data: data.usuario_id, error: null };
   } catch (error) {
-    console.error("Erro ao buscar usuario_id do revendedor:", error)
-    return { data: null, error }
+    console.error("Erro ao buscar usuario_id do revendedor:", error);
+    return { data: null, error };
   }
 }

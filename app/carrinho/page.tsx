@@ -1,59 +1,85 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Image from "next/image"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/context/auth-context"
-import { useCart } from "@/context/cart-context"
-import { getRevendedoresParaProdutos, getUserInfo } from "@/lib/database"
-import CustomAlert from "@/components/custom-alert"
-import EnderecoModal, { type EnderecoAlternativo } from "@/components/endereco-modal"
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/auth-context";
+import { useCart } from "@/context/cart-context";
+import { getRevendedoresParaProdutos, getUserInfo } from "@/lib/database";
+import CustomAlert from "@/components/custom-alert";
+import EnderecoModal, {
+  type EnderecoAlternativo,
+} from "@/components/endereco-modal";
 
 interface RevendedorEstoque {
-  quantidade: number
-  preco: number
-  status: string
+  quantidade: number;
+  preco: number;
+  status: string;
   revendedor: {
-    id: number
-    loja: string
-    cidade: string
-    uf: string
-    frete: number
-    vendas: number
-    status: boolean
-  }
+    id: number;
+    loja: string;
+    cidade: string;
+    uf: string;
+    frete: number;
+    vendas: number;
+    status: boolean;
+  };
 }
 
 interface UserInfo {
-  id: number
-  nome: string
-  email: string
-  cidade: string
-  uf: string
-  cep: string
-  rua: string
-  bairro: string
-  complemento: string
-  numero: string
+  id: number;
+  nome: string;
+  email: string;
+  cidade: string;
+  uf: string;
+  cep: string;
+  rua: string;
+  bairro: string;
+  complemento: string;
+  numero: string;
 }
 
+const billingTypeMap: Record<
+  string,
+  "BOLETO" | "CREDIT_CARD" | "PIX" | "UNDEFINED"
+> = {
+  boleto: "BOLETO",
+  cartao: "CREDIT_CARD",
+  pix: "PIX",
+};
+
 export default function Carrinho() {
-  const router = useRouter()
-  const { user } = useAuth()
-  const { items, removeItem, updateQuantity, getSubtotal, getTotal, clearCart } = useCart()
-  const [produtos, setProdutos] = useState(items)
-  const [tipoEntrega, setTipoEntrega] = useState("retirada")
-  const [metodoPagamento, setMetodoPagamento] = useState("pix")
-  const [revendedoresPorProduto, setRevendedoresPorProduto] = useState<Record<string, RevendedorEstoque[]>>({})
-  const [revendedorSelecionado, setRevendedorSelecionado] = useState<Record<string, RevendedorEstoque>>({})
-  const [loading, setLoading] = useState(true)
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
-  const [loadingUserInfo, setLoadingUserInfo] = useState(false)
-  const [checkoutFinalizado, setCheckoutFinalizado] = useState(false)
+  const router = useRouter();
+  const { user } = useAuth();
+  const {
+    items,
+    removeItem,
+    updateQuantity,
+    getSubtotal,
+    getTotal,
+    clearCart,
+  } = useCart();
+  const [produtos, setProdutos] = useState(items);
+  const [tipoEntrega, setTipoEntrega] = useState("retirada");
+  const [metodoPagamento, setMetodoPagamento] = useState("pix");
+  const [showModalPagamento, setShowModalPagamento] = useState(false);
+  const [activeTab, setActiveTab] = useState<"pix" | "boleto">("pix");
+  const [pedidoFinalizado, setPedidoFinalizado] = useState(false);
+  const [revendedoresPorProduto, setRevendedoresPorProduto] = useState<
+    Record<string, RevendedorEstoque[]>
+  >({});
+  const [revendedorSelecionado, setRevendedorSelecionado] = useState<
+    Record<string, RevendedorEstoque>
+  >({});
+  const [loading, setLoading] = useState(true);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [loadingUserInfo, setLoadingUserInfo] = useState(false);
+  const [checkoutFinalizado, setCheckoutFinalizado] = useState(false);
 
   // Estado para o endereço alternativo
-  const [enderecoAlternativo, setEnderecoAlternativo] = useState<EnderecoAlternativo | null>(null)
-  const [isEnderecoModalOpen, setIsEnderecoModalOpen] = useState(false)
+  const [enderecoAlternativo, setEnderecoAlternativo] =
+    useState<EnderecoAlternativo | null>(null);
+  const [isEnderecoModalOpen, setIsEnderecoModalOpen] = useState(false);
 
   // Alert state
   const [alertConfig, setAlertConfig] = useState({
@@ -61,119 +87,133 @@ export default function Carrinho() {
     title: "",
     message: "",
     type: "warning" as "info" | "warning" | "error" | "success",
-  })
+  });
+
+  const [pedido, setPedido] = useState<any>(null);
 
   useEffect(() => {
     // Atualizar produtos quando os itens do carrinho mudarem
-    setProdutos(items)
-  }, [items])
+    setProdutos(items);
+  }, [items]);
 
   // Buscar informações do usuário
   useEffect(() => {
     const fetchUserInfo = async () => {
-      if (!user) return
+      if (!user) return;
 
-      setLoadingUserInfo(true)
+      setLoadingUserInfo(true);
       try {
-        const { data, error } = await getUserInfo(user.id)
+        const { data, error } = await getUserInfo(user.id);
         if (error) {
-          console.error("Erro ao buscar informações do usuário:", error)
+          console.error("Erro ao buscar informações do usuário:", error);
         } else {
-          setUserInfo(data)
+          setUserInfo(data);
         }
       } catch (error) {
-        console.error("Erro ao buscar informações do usuário:", error)
+        console.error("Erro ao buscar informações do usuário:", error);
       } finally {
-        setLoadingUserInfo(false)
+        setLoadingUserInfo(false);
       }
-    }
+    };
 
-    fetchUserInfo()
-  }, [user])
+    fetchUserInfo();
+  }, [user]);
 
   useEffect(() => {
     // Buscar revendedores quando os produtos mudarem
     const buscarRevendedores = async () => {
       if (produtos.length === 0) {
-        setLoading(false)
-        return
+        setLoading(false);
+        return;
       }
 
       try {
-        const produtoNomes = produtos.map((produto) => produto.nome)
-        const { data, error } = await getRevendedoresParaProdutos(produtoNomes)
+        const produtoNomes = produtos.map((produto) => produto.nome);
+        const { data, error } = await getRevendedoresParaProdutos(produtoNomes);
 
         if (error) {
-          console.error("Erro ao buscar revendedores:", error)
-          setLoading(false)
-          return
+          console.error("Erro ao buscar revendedores:", error);
+          setLoading(false);
+          return;
         }
 
-        setRevendedoresPorProduto(data)
+        setRevendedoresPorProduto(data);
 
         // Selecionar automaticamente o revendedor da cidade do usuário com menor preço, ou o mais barato se não houver na cidade
-        const revendedoresIniciais: Record<string, RevendedorEstoque> = {}
+        const revendedoresIniciais: Record<string, RevendedorEstoque> = {};
         Object.keys(data).forEach((produtoNome) => {
-          const revendedores = data[produtoNome]
+          const revendedores = data[produtoNome];
           if (revendedores && revendedores.length > 0) {
             // Tentar encontrar um revendedor da cidade do usuário primeiro
             const revendedorDaCidade = userInfo?.cidade
-              ? revendedores.find((r) => r.revendedor.cidade.toLowerCase() === userInfo.cidade.toLowerCase())
-              : null
+              ? revendedores.find(
+                  (r) =>
+                    r.revendedor.cidade.toLowerCase() ===
+                    userInfo.cidade.toLowerCase()
+                )
+              : null;
 
-            revendedoresIniciais[produtoNome] = revendedorDaCidade || revendedores[0]
+            revendedoresIniciais[produtoNome] =
+              revendedorDaCidade || revendedores[0];
           }
-        })
-        setRevendedorSelecionado(revendedoresIniciais)
+        });
+        setRevendedorSelecionado(revendedoresIniciais);
       } catch (error) {
-        console.error("Erro ao buscar revendedores:", error)
+        console.error("Erro ao buscar revendedores:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    buscarRevendedores()
-  }, [produtos, userInfo])
+    buscarRevendedores();
+  }, [produtos, userInfo]);
 
   const removerProduto = (id: string) => {
-    removeItem(id)
-  }
+    removeItem(id);
+  };
 
   const alterarQuantidade = (id: string, novaQuantidade: number) => {
     // Ensure quantity is a multiple of 5 and at least 5
-    const adjustedQuantity = Math.max(Math.round(novaQuantidade / 5) * 5, 5)
-    updateQuantity(id, adjustedQuantity)
-  }
+    const adjustedQuantity = Math.max(Math.round(novaQuantidade / 5) * 5, 5);
+    updateQuantity(id, adjustedQuantity);
+  };
 
   const calcularSubtotal = () => {
     return produtos.reduce((total, produto) => {
-      const revendedor = revendedorSelecionado[produto.nome]
-      const preco = revendedor ? revendedor.preco : 0
-      return total + preco * produto.quantidade
-    }, 0)
-  }
+      const revendedor = revendedorSelecionado[produto.nome];
+      const preco = revendedor ? revendedor.preco : 0;
+      return total + preco * produto.quantidade;
+    }, 0);
+  };
 
   // Calcular frete total
   const calcularFrete = () => {
     if (tipoEntrega === "retirada") {
-      return 0 // Retirada é sempre grátis
+      return 0; // Retirada é sempre grátis
     }
 
-    const revendedoresUnicos = new Set(Object.values(revendedorSelecionado).map((r) => r.revendedor.id))
+    const revendedoresUnicos = new Set(
+      Object.values(revendedorSelecionado).map((r) => r.revendedor.id)
+    );
     return Array.from(revendedoresUnicos).reduce((total, revendedorId) => {
-      const revendedor = Object.values(revendedorSelecionado).find((r) => r.revendedor.id === revendedorId)
-      return total + (revendedor?.revendedor.frete || 0)
-    }, 0)
-  }
+      const revendedor = Object.values(revendedorSelecionado).find(
+        (r) => r.revendedor.id === revendedorId
+      );
+      return total + (revendedor?.revendedor.frete || 0);
+    }, 0);
+  };
 
-  const subtotal = calcularSubtotal()
-  const frete = calcularFrete()
-  const total = subtotal + frete
-  const totalQuantity = produtos.reduce((sum, produto) => sum + produto.quantidade, 0)
+  const subtotal = calcularSubtotal();
+  const frete = calcularFrete();
+  const total = subtotal + frete;
+  const totalQuantity = produtos.reduce(
+    (sum, produto) => sum + produto.quantidade,
+    0
+  );
 
   const closeAlert = () => {
-    setAlertConfig((prev) => ({ ...prev, isOpen: false }))
-  }
+    setAlertConfig((prev) => ({ ...prev, isOpen: false }));
+  };
 
   // Modificar a função handleCheckout para integrar com o Asaas
 
@@ -183,44 +223,50 @@ export default function Carrinho() {
       setAlertConfig({
         isOpen: true,
         title: "Login Necessário",
-        message: "Você precisa estar logado para finalizar a compra. Redirecionando para a página de login...",
+        message:
+          "Você precisa estar logado para finalizar a compra. Redirecionando para a página de login...",
         type: "warning",
-      })
+      });
 
       setTimeout(() => {
-        closeAlert()
-        router.push("/login")
-      }, 2000)
-      return
+        closeAlert();
+        router.push("/login");
+      }, 2000);
+      return;
     }
 
     // Verificar se todos os produtos têm revendedores selecionados
-    const produtosSemRevendedor = produtos.filter((produto) => !revendedorSelecionado[produto.nome])
+    const produtosSemRevendedor = produtos.filter(
+      (produto) => !revendedorSelecionado[produto.nome]
+    );
     if (produtosSemRevendedor.length > 0) {
       setAlertConfig({
         isOpen: true,
         title: "Revendedor Necessário",
-        message: "Selecione um revendedor para todos os produtos antes de finalizar a compra.",
+        message:
+          "Selecione um revendedor para todos os produtos antes de finalizar a compra.",
         type: "warning",
-      })
-      return
+      });
+      return;
     }
 
     // Verificar quantidade mínima
     if (totalQuantity < 50) {
-      const unidadesFaltando = 50 - totalQuantity
+      const unidadesFaltando = 50 - totalQuantity;
       setAlertConfig({
         isOpen: true,
         title: "Quantidade Mínima",
-        message: `A quantidade mínima do pedido é de 50 unidades.\n\nVocê tem ${totalQuantity} unidades no carrinho.\n\nAdicione mais ${unidadesFaltando} unidade${unidadesFaltando > 1 ? "s" : ""} para continuar com a compra.`,
+        message: `A quantidade mínima do pedido é de 50 unidades.\n\nVocê tem ${totalQuantity} unidades no carrinho.\n\nAdicione mais ${unidadesFaltando} unidade${
+          unidadesFaltando > 1 ? "s" : ""
+        } para continuar com a compra.`,
         type: "warning",
-      })
-      return
+      });
+      return;
     }
 
     // Verificar se o endereço está completo para entrega
     if (tipoEntrega === "entrega") {
-      const enderecoEntrega = enderecoAlternativo || userInfo
+      const enderecoEntrega = enderecoAlternativo || userInfo;
       if (
         !enderecoEntrega ||
         !enderecoEntrega.cep ||
@@ -231,10 +277,11 @@ export default function Carrinho() {
         setAlertConfig({
           isOpen: true,
           title: "Endereço Incompleto",
-          message: "Por favor, complete o endereço de entrega antes de finalizar a compra.",
+          message:
+            "Por favor, complete o endereço de entrega antes de finalizar a compra.",
           type: "warning",
-        })
-        return
+        });
+        return;
       }
     }
 
@@ -244,103 +291,121 @@ export default function Carrinho() {
         title: "Processando",
         message: "Estamos processando seu pedido, aguarde...",
         type: "info",
-      })
+      });
 
       // Importar a nova função
-      const { criarPedidoNovo, limparCarrinhoUsuario } = await import("@/lib/database")
+      const { criarPedidoNovo, limparCarrinhoUsuario } = await import(
+        "@/lib/database"
+      );
 
       // Pegar o primeiro revendedor (assumindo que todos os produtos são do mesmo revendedor por enquanto)
-      const primeiroRevendedor = Object.values(revendedorSelecionado)[0]
-      const revendedorId = primeiroRevendedor.revendedor.id
+      const primeiroRevendedor = Object.values(revendedorSelecionado)[0];
+      const revendedorId = primeiroRevendedor.revendedor.id;
 
       // Preparar itens com informações do revendedor
       const itensComRevendedor = produtos.map((produto) => ({
         ...produto,
         preco: revendedorSelecionado[produto.nome].preco,
         pacote_id: 1, // Por enquanto usando ID fixo, depois você pode mapear corretamente
-      }))
+      }));
 
       // Criar pedido no banco de dados usando o novo schema
-      const { data: pedido, error } = await criarPedidoNovo(
+      const { data: pedidoData, pix, boleto, error } = await criarPedidoNovo(
+
         user.id,
         revendedorId,
         itensComRevendedor,
         total,
         frete,
         tipoEntrega,
-        metodoPagamento,
-      )
+        billingTypeMap[metodoPagamento] // Aqui fazemos o mapeamento
+      );
 
       if (error) {
-        throw error
+        throw error;
       }
 
-      // Limpar carrinho no banco de dados
-      await limparCarrinhoUsuario(user.id)
+      if (metodoPagamento === "pix" || metodoPagamento === "boleto") {
+        setShowModalPagamento(true);
+        setPedido({
+          ...pedidoData,
+          pix,
+          boleto,
+        });
+        console.log(pedido);
+        setPedidoFinalizado(true);
+      } else {
+        // Limpar carrinho no banco de dados
+        await limparCarrinhoUsuario(user.id);
 
-      // Limpar carrinho no contexto (estado local)
-      clearCart()
+        // Limpar carrinho no contexto (estado local)
+        clearCart();
 
-      // Após limpar carrinho e antes do setTimeout
-      setCheckoutFinalizado(true)
+        // Após limpar carrinho e antes do setTimeout
+        setCheckoutFinalizado(true);
+        // Simular pagamento automático - mostrar sucesso
+        setAlertConfig({
+          isOpen: true,
+          title: "Pedido Realizado com Sucesso! 🎉",
+          message: `Seu pedido #${
+            pedido.numero
+          } foi criado e o pagamento foi processado automaticamente.\n\nTotal: R$ ${total.toFixed(
+            2
+          )}\n\nVocê pode acompanhar o status do seu pedido na página de histórico.`,
+          type: "success",
+        });
 
-      // Simular pagamento automático - mostrar sucesso
-      setAlertConfig({
-        isOpen: true,
-        title: "Pedido Realizado com Sucesso! 🎉",
-        message: `Seu pedido #${pedido.numero} foi criado e o pagamento foi processado automaticamente.\n\nTotal: R$ ${total.toFixed(2)}\n\nVocê pode acompanhar o status do seu pedido na página de histórico.`,
-        type: "success",
-      })
-
-      // Redirecionar para pedidos após 3 segundos
-      setTimeout(() => {
-        closeAlert()
-        router.push("/pedidos")
-      }, 3000)
+        // Redirecionar para pedidos após 3 segundos
+        setTimeout(() => {
+          closeAlert();
+          router.push("/pedidos");
+        }, 3000);
+      }
     } catch (error) {
-      console.error("Erro ao finalizar compra:", error)
+      console.error("Erro ao finalizar compra:", error);
       setAlertConfig({
         isOpen: true,
         title: "Erro na Compra",
-        message: "Ocorreu um erro ao finalizar a compra. Tente novamente em alguns instantes.",
+        message:
+          "Ocorreu um erro ao finalizar a compra. Tente novamente em alguns instantes.",
         type: "error",
-      })
+      });
     }
-  }
+  };
 
   const handleOpenEnderecoModal = () => {
     // Sempre abre o modal para editar/criar endereço alternativo
     // Se já existe um endereço alternativo, usa ele, senão começa vazio
-    setIsEnderecoModalOpen(true)
-  }
+    setIsEnderecoModalOpen(true);
+  };
 
   const handleSaveEndereco = (endereco: EnderecoAlternativo) => {
-    setEnderecoAlternativo(endereco)
+    setEnderecoAlternativo(endereco);
     setAlertConfig({
       isOpen: true,
       title: "Endereço Alternativo Salvo",
       message: "O endereço alternativo para este pedido foi salvo com sucesso!",
       type: "success",
-    })
-  }
+    });
+  };
 
   const handleRemoveEnderecoAlternativo = () => {
-    setEnderecoAlternativo(null)
+    setEnderecoAlternativo(null);
     setAlertConfig({
       isOpen: true,
       title: "Endereço Alternativo Removido",
       message: "Voltando a usar o endereço da sua conta para este pedido.",
       type: "info",
-    })
-  }
+    });
+  };
 
   const handleVoltar = () => {
     if (checkoutFinalizado) {
-      router.push("/dashboard")
+      router.push("/dashboard");
     } else {
-      router.back()
+      router.back();
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -352,7 +417,7 @@ export default function Carrinho() {
           </div>
         </div>
       </main>
-    )
+    );
   }
 
   return (
@@ -374,6 +439,156 @@ export default function Carrinho() {
         enderecoInicial={enderecoAlternativo}
       />
 
+      {/* Modal de Pagamento */}
+      {showModalPagamento && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Dados do Pagamento</h2>
+              <button
+                onClick={() => {
+                  setShowModalPagamento(false);
+                  // Quando fechar o modal, executar a limpeza e redirecionamento
+                  if (pedidoFinalizado) {
+                    // Limpar carrinho no banco de dados
+                    limparCarrinhoUsuario(user.id);
+
+                    // Limpar carrinho no contexto (estado local)
+                    clearCart();
+
+                    // Após limpar carrinho e antes do setTimeout
+                    setCheckoutFinalizado(true);
+                    // Simular pagamento automático - mostrar sucesso
+                    setAlertConfig({
+                      isOpen: true,
+                      title: "Pedido Realizado com Sucesso! 🎉",
+                      message: `Seu pedido #${
+                        pedido.numero
+                      } foi criado e o pagamento foi processado automaticamente.\n\nTotal: R$ ${total.toFixed(
+                        2
+                      )}\n\nVocê pode acompanhar o status do seu pedido na página de histórico.`,
+                      type: "success",
+                    });
+
+                    // Redirecionar para pedidos após 3 segundos
+                    setTimeout(() => {
+                      closeAlert();
+                      router.push("/pedidos");
+                    }, 3000);
+                  }
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <span className="text-2xl">&times;</span>
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <div className="flex space-x-1 rounded-xl bg-gray-100 p-1">
+                <button
+                  onClick={() => setActiveTab("pix")}
+                  className={`w-full rounded-lg py-2.5 text-sm font-medium leading-5 
+                    ${
+                      activeTab === "pix"
+                        ? "bg-white text-blue-700 shadow"
+                        : "text-gray-600 hover:text-gray-800"
+                    }`}
+                >
+                  PIX
+                </button>
+                {pedido?.pagamento_tipo === "BOLETO" && (
+                <button
+                  onClick={() => setActiveTab("boleto")}
+                  className={`w-full rounded-lg py-2.5 text-sm font-medium leading-5 
+                    ${
+                      activeTab === "boleto"
+                        ? "bg-white text-blue-700 shadow"
+                        : "text-gray-600 hover:text-gray-800"
+                    }`}
+                >
+                  Boleto
+                </button>
+              )}
+              </div>
+
+              <div className="mt-4">
+                {activeTab === "pix" && pedido?.pagamento_tipo === "PIX" && (
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="w-64 h-64">
+                    <img
+                      src={`data:image/png;base64,${pedido?.pix?.encodedImage}`}
+                      alt="QR Code PIX"
+                      className="w-full h-full"
+                    />
+                    </div>
+                    <div className="text-center">
+                    <p className="font-semibold mb-2">
+                      Vencimento:{" "}
+                      {new Date(pedido?.pix?.expirationDate).toLocaleDateString("pt-BR")}
+                    </p>  
+                      <p className="text-sm mb-2">Copie o código abaixo:</p>
+                      <div className="relative">
+                      <input
+                        readOnly
+                        className="w-full p-2 border border-gray-300 rounded bg-white text-gray-800"
+                        type="text"
+                        value={pedido?.pix?.payload}
+                      />
+
+                        <button
+                          onClick={() =>
+                            navigator.clipboard.writeText(pedido?.pix?.payload)
+                          }
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800"
+                        >
+                          Copiar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "boleto" && pedido?.pagamento_tipo === "BOLETO" && (
+                  <div className="flex flex-col space-y-4">
+                    <div className="text-center">
+                      <a
+                        href={pedido?.boleto?.bankSlipUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                      >
+                        Visualizar Boleto
+                      </a>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm mb-2">Linha Digitável:</p>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          readOnly
+                          value={pedido?.boleto?.identificationField}
+                          className="w-full p-2 border rounded bg-gray-50"
+                        />
+                        <button
+                          onClick={() =>
+                            navigator.clipboard.writeText(
+                              pedido?.boleto?.identificationField
+                            )
+                          }
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800"
+                        >
+                          Copiar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Botão voltar */}
       <div className="p-4">
         <button onClick={handleVoltar} className="text-white">
@@ -384,7 +599,12 @@ export default function Carrinho() {
             viewBox="0 0 24 24"
             stroke="currentColor"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
         </button>
       </div>
@@ -392,12 +612,18 @@ export default function Carrinho() {
       {/* Informação sobre quantidade mínima */}
       <div className="px-4 mb-4">
         <div
-          className={`border rounded-lg p-3 ${totalQuantity >= 50 ? "bg-green-500 bg-opacity-20 border-green-500" : "bg-blue-500 bg-opacity-20 border-blue-500"}`}
+          className={`border rounded-lg p-3 ${
+            totalQuantity >= 50
+              ? "bg-green-500 bg-opacity-20 border-green-500"
+              : "bg-blue-500 bg-opacity-20 border-blue-500"
+          }`}
         >
           <div className="flex items-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className={`h-5 w-5 mr-2 ${totalQuantity >= 50 ? "text-green-400" : "text-blue-400"}`}
+              className={`h-5 w-5 mr-2 ${
+                totalQuantity >= 50 ? "text-green-400" : "text-blue-400"
+              }`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -409,8 +635,13 @@ export default function Carrinho() {
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <p className={`text-sm ${totalQuantity >= 50 ? "text-green-400" : "text-blue-400"}`}>
-              Quantidade total: {totalQuantity}/50 unidades {totalQuantity >= 50 ? "✓" : "(mínimo necessário)"}
+            <p
+              className={`text-sm ${
+                totalQuantity >= 50 ? "text-green-400" : "text-blue-400"
+              }`}
+            >
+              Quantidade total: {totalQuantity}/50 unidades{" "}
+              {totalQuantity >= 50 ? "✓" : "(mínimo necessário)"}
             </p>
           </div>
         </div>
@@ -430,10 +661,13 @@ export default function Carrinho() {
           </div>
         ) : (
           produtos.map((produto) => {
-            const revendedorAtual = revendedorSelecionado[produto.nome]
+            const revendedorAtual = revendedorSelecionado[produto.nome];
 
             return (
-              <div key={produto.id} className="mb-8 bg-[#3A3942] rounded-lg p-4">
+              <div
+                key={produto.id}
+                className="mb-8 bg-[#3A3942] rounded-lg p-4"
+              >
                 {/* Produto */}
                 <div className="flex items-center mb-4">
                   <div className="w-[120px] h-[120px] rounded-[12px] border border-[#3A3942] overflow-hidden mr-4">
@@ -449,7 +683,9 @@ export default function Carrinho() {
                     <div>
                       <h3 className="font-bold">{produto.nome}</h3>
                       <p className="text-gray-400 mt-2">
-                        {revendedorAtual ? `R$ ${revendedorAtual.preco.toFixed(2)}` : "Selecione um revendedor"}
+                        {revendedorAtual
+                          ? `R$ ${revendedorAtual.preco.toFixed(2)}`
+                          : "Selecione um revendedor"}
                       </p>
                     </div>
                     <div className="flex items-center justify-between w-full">
@@ -475,7 +711,12 @@ export default function Carrinho() {
                           </svg>
                         </button>
                         <button
-                          onClick={() => alterarQuantidade(produto.id, Math.max(produto.quantidade - 5, 5))}
+                          onClick={() =>
+                            alterarQuantidade(
+                              produto.id,
+                              Math.max(produto.quantidade - 5, 5)
+                            )
+                          }
                           className="p-1 rounded-md mr-2"
                           aria-label="Diminuir quantidade"
                         >
@@ -486,12 +727,24 @@ export default function Carrinho() {
                             viewBox="0 0 24 24"
                             stroke="currentColor"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M20 12H4"
+                            />
                           </svg>
                         </button>
-                        <span className="mx-2 min-w-[40px] text-center">{produto.quantidade}</span>
+                        <span className="mx-2 min-w-[40px] text-center">
+                          {produto.quantidade}
+                        </span>
                         <button
-                          onClick={() => alterarQuantidade(produto.id, produto.quantidade + 5)}
+                          onClick={() =>
+                            alterarQuantidade(
+                              produto.id,
+                              produto.quantidade + 5
+                            )
+                          }
                           className="p-1 rounded-md"
                           aria-label="Aumentar quantidade"
                         >
@@ -513,14 +766,19 @@ export default function Carrinho() {
                       </div>
                       <div className="text-right">
                         <p className="font-bold">
-                          R$ {revendedorAtual ? (revendedorAtual.preco * produto.quantidade).toFixed(2) : "0,00"}
+                          R${" "}
+                          {revendedorAtual
+                            ? (
+                                revendedorAtual.preco * produto.quantidade
+                              ).toFixed(2)
+                            : "0,00"}
                         </p>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            )
+            );
           })
         )}
       </div>
@@ -531,42 +789,56 @@ export default function Carrinho() {
           <div className="px-4 py-6">
             <h3 className="font-bold mb-4">Revendedor selecionado</h3>
             {Object.keys(revendedorSelecionado).length === 0 ? (
-              <p className="text-gray-400 text-sm">Nenhum revendedor selecionado para os produtos.</p>
+              <p className="text-gray-400 text-sm">
+                Nenhum revendedor selecionado para os produtos.
+              </p>
             ) : (
               (() => {
                 // Get unique resellers
-                const revendedoresUnicos = Object.values(revendedorSelecionado).reduce(
-                  (acc, item) => {
-                    const key = item.revendedor.id
-                    if (!acc[key]) {
-                      acc[key] = item
-                    }
-                    return acc
-                  },
-                  {} as Record<number, RevendedorEstoque>,
-                )
+                const revendedoresUnicos = Object.values(
+                  revendedorSelecionado
+                ).reduce((acc, item) => {
+                  const key = item.revendedor.id;
+                  if (!acc[key]) {
+                    acc[key] = item;
+                  }
+                  return acc;
+                }, {} as Record<number, RevendedorEstoque>);
 
                 return Object.values(revendedoresUnicos).map((revendedor) => (
-                  <div key={revendedor.revendedor.id} className="bg-[#3A3942] rounded-lg p-3 mb-3">
+                  <div
+                    key={revendedor.revendedor.id}
+                    className="bg-[#3A3942] rounded-lg p-3 mb-3"
+                  >
                     <div className="flex justify-between items-center p-2 bg-[#2C2B34] rounded">
                       <div>
-                        <p className="font-medium text-sm">{revendedor.revendedor.loja}</p>
-                        <p className="text-xs text-gray-400">
-                          {revendedor.revendedor.cidade}/{revendedor.revendedor.uf}
+                        <p className="font-medium text-sm">
+                          {revendedor.revendedor.loja}
                         </p>
-                        <p className="text-xs text-gray-400">{revendedor.revendedor.vendas} vendas</p>
+                        <p className="text-xs text-gray-400">
+                          {revendedor.revendedor.cidade}/
+                          {revendedor.revendedor.uf}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {revendedor.revendedor.vendas} vendas
+                        </p>
                       </div>
                       <div className="text-right">
                         {userInfo?.cidade &&
-                        revendedor.revendedor.cidade.toLowerCase() === userInfo.cidade.toLowerCase() ? (
-                          <p className="text-xs text-green-400">Retirada grátis</p>
+                        revendedor.revendedor.cidade.toLowerCase() ===
+                          userInfo.cidade.toLowerCase() ? (
+                          <p className="text-xs text-green-400">
+                            Retirada grátis
+                          </p>
                         ) : (
-                          <p className="text-xs text-gray-400">+ R$ {revendedor.revendedor.frete} frete</p>
+                          <p className="text-xs text-gray-400">
+                            + R$ {revendedor.revendedor.frete} frete
+                          </p>
                         )}
                       </div>
                     </div>
                   </div>
-                ))
+                ));
               })()
             )}
           </div>
@@ -579,7 +851,11 @@ export default function Carrinho() {
             </div>
             <div className="flex justify-between mb-2">
               <span>Frete</span>
-              <span>{tipoEntrega === "retirada" ? "Grátis" : `R$ ${frete.toFixed(2)}`}</span>
+              <span>
+                {tipoEntrega === "retirada"
+                  ? "Grátis"
+                  : `R$ ${frete.toFixed(2)}`}
+              </span>
             </div>
             <div className="flex justify-between font-bold">
               <span>Total</span>
@@ -601,10 +877,15 @@ export default function Carrinho() {
                   className="mr-3 w-[20px] h-[20px] mt-1 accent-[#fdc300]"
                 />
                 <div>
-                  <label htmlFor="retirada" className="font-medium cursor-pointer">
+                  <label
+                    htmlFor="retirada"
+                    className="font-medium cursor-pointer"
+                  >
                     Retirada no local
                   </label>
-                  <p className="text-sm text-gray-400">Retire diretamente na loja do revendedor</p>
+                  <p className="text-sm text-gray-400">
+                    Retire diretamente na loja do revendedor
+                  </p>
                 </div>
               </div>
               <div className="flex items-start mb-3">
@@ -617,34 +898,54 @@ export default function Carrinho() {
                   className="mr-3 w-[20px] h-[20px] mt-1 accent-[#fdc300]"
                 />
                 <div>
-                  <label htmlFor="entrega" className="font-medium cursor-pointer">
+                  <label
+                    htmlFor="entrega"
+                    className="font-medium cursor-pointer"
+                  >
                     Entrega
                   </label>
-                  <p className="text-sm text-gray-400">Receba em seu endereço</p>
+                  <p className="text-sm text-gray-400">
+                    Receba em seu endereço
+                  </p>
                 </div>
               </div>
 
               {/* Botão e informações de endereço alternativo - aparece apenas quando "entrega" está selecionado */}
               {tipoEntrega === "entrega" && (
                 <div className="mt-4 p-3 bg-[#3A3942] rounded-lg">
-                  <h4 className="font-medium text-sm mb-2">Endereço de entrega</h4>
+                  <h4 className="font-medium text-sm mb-2">
+                    Endereço de entrega
+                  </h4>
 
                   {enderecoAlternativo ? (
                     <div className="mb-3">
                       <div className="p-3 bg-[#2C2B34] rounded-lg mb-2">
-                        <p className="text-xs text-green-400 mb-1">📍 Endereço alternativo para este pedido</p>
-                        <p className="font-medium text-sm">{enderecoAlternativo.nome}</p>
-                        <p className="text-xs text-gray-400">
-                          {enderecoAlternativo.rua}, {enderecoAlternativo.numero}
-                          {enderecoAlternativo.complemento ? `, ${enderecoAlternativo.complemento}` : ""}
+                        <p className="text-xs text-green-400 mb-1">
+                          📍 Endereço alternativo para este pedido
+                        </p>
+                        <p className="font-medium text-sm">
+                          {enderecoAlternativo.nome}
                         </p>
                         <p className="text-xs text-gray-400">
-                          {enderecoAlternativo.bairro} - {enderecoAlternativo.cidade}/{enderecoAlternativo.uf}
+                          {enderecoAlternativo.rua},{" "}
+                          {enderecoAlternativo.numero}
+                          {enderecoAlternativo.complemento
+                            ? `, ${enderecoAlternativo.complemento}`
+                            : ""}
                         </p>
-                        <p className="text-xs text-gray-400">CEP: {enderecoAlternativo.cep}</p>
+                        <p className="text-xs text-gray-400">
+                          {enderecoAlternativo.bairro} -{" "}
+                          {enderecoAlternativo.cidade}/{enderecoAlternativo.uf}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          CEP: {enderecoAlternativo.cep}
+                        </p>
                       </div>
                       <div className="flex space-x-2">
-                        <button onClick={handleOpenEnderecoModal} className="text-xs text-[#fdc300] hover:underline">
+                        <button
+                          onClick={handleOpenEnderecoModal}
+                          className="text-xs text-[#fdc300] hover:underline"
+                        >
                           Editar endereço alternativo
                         </button>
                         <button
@@ -658,25 +959,35 @@ export default function Carrinho() {
                   ) : userInfo && userInfo.cep ? (
                     <div className="mb-3">
                       <div className="p-3 bg-[#2C2B34] rounded-lg mb-2">
-                        <p className="text-xs text-blue-400 mb-1">🏠 Endereço da sua conta</p>
+                        <p className="text-xs text-blue-400 mb-1">
+                          🏠 Endereço da sua conta
+                        </p>
                         <p className="font-medium text-sm">{userInfo.nome}</p>
                         <p className="text-xs text-gray-400">
                           {userInfo.rua}, {userInfo.numero}
-                          {userInfo.complemento ? `, ${userInfo.complemento}` : ""}
+                          {userInfo.complemento
+                            ? `, ${userInfo.complemento}`
+                            : ""}
                         </p>
                         <p className="text-xs text-gray-400">
                           {userInfo.bairro} - {userInfo.cidade}/{userInfo.uf}
                         </p>
-                        <p className="text-xs text-gray-400">CEP: {userInfo.cep}</p>
+                        <p className="text-xs text-gray-400">
+                          CEP: {userInfo.cep}
+                        </p>
                       </div>
-                      <button onClick={handleOpenEnderecoModal} className="text-xs text-[#fdc300] hover:underline">
+                      <button
+                        onClick={handleOpenEnderecoModal}
+                        className="text-xs text-[#fdc300] hover:underline"
+                      >
                         Usar endereço alternativo para este pedido
                       </button>
                     </div>
                   ) : (
                     <div className="mb-3">
                       <p className="text-sm text-gray-400 mb-2">
-                        Você ainda não tem um endereço cadastrado ou seu endereço está incompleto.
+                        Você ainda não tem um endereço cadastrado ou seu
+                        endereço está incompleto.
                       </p>
                       <button
                         onClick={handleOpenEnderecoModal}
@@ -736,7 +1047,9 @@ export default function Carrinho() {
                 <label htmlFor="boleto" className="font-medium cursor-pointer">
                   Pagar com Boleto Bancário
                 </label>
-                <p className="text-sm text-gray-400">Vencimento em 3 dias úteis</p>
+                <p className="text-sm text-gray-400">
+                  Vencimento em 3 dias úteis
+                </p>
               </div>
             </div>
           </div>
@@ -744,7 +1057,10 @@ export default function Carrinho() {
           {/* Botão de checkout */}
           <button
             onClick={handleCheckout}
-            disabled={produtos.length === 0 || Object.keys(revendedorSelecionado).length !== produtos.length}
+            disabled={
+              produtos.length === 0 ||
+              Object.keys(revendedorSelecionado).length !== produtos.length
+            }
             className="w-full bg-[#fdc300] text-white py-4 rounded-full font-bold disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {totalQuantity < 50
@@ -754,5 +1070,5 @@ export default function Carrinho() {
         </>
       )}
     </main>
-  )
+  );
 }

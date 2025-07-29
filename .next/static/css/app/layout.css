@@ -923,6 +923,9 @@ video {
 .h-64 {
   height: 16rem;
 }
+.h-\[600px\] {
+  height: 600px;
+}
 .max-h-60 {
   max-height: 15rem;
 }
@@ -2486,6 +2489,10 @@ body {
 }
 .hover\:bg-white\/\[0\.12\]:hover {
   background-color: rgb(255 255 255 / 0.12);
+}
+.hover\:bg-gray-700:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(55 65 81 / var(--tw-bg-opacity, 1));
 }
 .hover\:bg-opacity-80:hover {
   --tw-bg-opacity: 0.8;

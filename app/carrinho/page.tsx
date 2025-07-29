@@ -1,11 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
-import { getRevendedoresParaProdutos, getUserInfo } from "@/lib/database";
+import {
+  getRevendedoresParaProdutos,
+  getUserInfo,
+  limparCarrinhoUsuario,
+  checkStatusPedido,
+} from "@/lib/database";
 import CustomAlert from "@/components/custom-alert";
 import EnderecoModal, {
   type EnderecoAlternativo,
@@ -90,6 +95,9 @@ export default function Carrinho() {
   });
 
   const [pedido, setPedido] = useState<any>(null);
+  const pedidoRef = useRef<any>(null);
+  const orderNumberRef = useRef<string | null>(null);
+  const orderValueRef = useRef<number | null>(null);
 
   useEffect(() => {
     // Atualizar produtos quando os itens do carrinho mudarem
@@ -293,6 +301,11 @@ export default function Carrinho() {
         type: "info",
       });
 
+      // Fechar o alerta de processamento após 3 segundos
+      setTimeout(() => {
+        closeAlert();
+      }, 3000);
+
       // Importar a nova função
       const { criarPedidoNovo, limparCarrinhoUsuario } = await import(
         "@/lib/database"
@@ -310,15 +323,20 @@ export default function Carrinho() {
       }));
 
       // Criar pedido no banco de dados usando o novo schema
-      const { data: pedidoData, pix, boleto, error } = await criarPedidoNovo(
-
+      const {
+        data: pedidoData,
+        pix,
+        boleto,
+        pagamentoId,
+        error,
+      } = await criarPedidoNovo(
         user.id,
         revendedorId,
         itensComRevendedor,
         total,
         frete,
         tipoEntrega,
-        billingTypeMap[metodoPagamento] // Aqui fazemos o mapeamento
+        billingTypeMap[metodoPagamento], // Aqui fazemos o mapeamento
       );
 
       if (error) {
@@ -331,8 +349,10 @@ export default function Carrinho() {
           ...pedidoData,
           pix,
           boleto,
+          pagamentoId,
         });
-        console.log(pedido);
+
+        console.log("pedido", pedidoData);
         setPedidoFinalizado(true);
       } else {
         // Limpar carrinho no banco de dados
@@ -349,7 +369,7 @@ export default function Carrinho() {
           title: "Pedido Realizado com Sucesso! 🎉",
           message: `Seu pedido #${
             pedido.numero
-          } foi criado e o pagamento foi processado automaticamente.\n\nTotal: R$ ${total.toFixed(
+          } foi criado e o pagamento foi processado automaticamente.\n\nTotal: R$ ${pedido.valor_total.toFixed(
             2
           )}\n\nVocê pode acompanhar o status do seu pedido na página de histórico.`,
           type: "success",
@@ -372,6 +392,69 @@ export default function Carrinho() {
       });
     }
   };
+
+  // Atualize o pedidoRef sempre que o estado "pedido" mudar
+  useEffect(() => {
+    if (pedido?.pagamentoId) {
+      pedidoRef.current = pedido.pagamentoId;
+      orderNumberRef.current = pedido.numero;
+      orderValueRef.current = pedido.valor_total;
+    }
+  }, [pedido]);
+
+  // Verificação periódica do status do pedido
+  useEffect(() => {
+    const intervalId = setInterval(async () => {
+      if (pedidoRef.current) {
+        try {
+          const statusResponse = await checkStatusPedido(pedidoRef.current);
+          console.log("Status do pedido:", statusResponse);
+
+          // Atualize o estado do pedido se necessário:
+          if (statusResponse?.data !== pedido?.status) {
+            setPedido((prev: any) => ({
+              ...prev,
+              status: statusResponse.data,
+            }));
+          }
+
+          // Se o status "RECEIVED", você pode limpar o intervalo
+          if (statusResponse.data === "RECEIVED") {
+            clearInterval(intervalId);
+            console.log("Status final alcançado, parando verificação.");
+            setShowModalPagamento(false);
+            if (user?.id) {
+              await limparCarrinhoUsuario(user.id);
+            }
+
+            clearCart();
+
+            setAlertConfig({
+              isOpen: true,
+              title: "Pedido Realizado com Sucesso! 🎉",
+              message: `Seu pedido #${
+                orderNumberRef.current || "N/A"
+              } foi criado e o pagamento foi processado automaticamente.\n\nTotal: R$ ${orderValueRef.current?.toFixed(
+                2
+              )}\n\nVocê pode acompanhar o status do seu pedido na página de histórico.`,
+              type: "success",
+            });
+
+            // Redirecionar para pedidos após 3 segundos
+            setTimeout(() => {
+              closeAlert();
+              router.push("/pedidos");
+            }, 3000);
+          }
+        } catch (error) {
+          console.error("Erro ao verificar status do pedido:", error);
+        }
+      }
+    }, 5000); // 5000ms = 5s
+
+    // Limpa o intervalo ao desmontar o componente
+    return () => clearInterval(intervalId);
+  }, []);
 
   const handleOpenEnderecoModal = () => {
     // Sempre abre o modal para editar/criar endereço alternativo
@@ -406,6 +489,8 @@ export default function Carrinho() {
       router.back();
     }
   };
+
+  const [showEmbedBoleto, setShowEmbedBoleto] = useState(false);
 
   if (loading) {
     return (
@@ -444,47 +529,14 @@ export default function Carrinho() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Dados do Pagamento</h2>
-              <button
-                onClick={() => {
-                  setShowModalPagamento(false);
-                  // Quando fechar o modal, executar a limpeza e redirecionamento
-                  if (pedidoFinalizado) {
-                    // Limpar carrinho no banco de dados
-                    limparCarrinhoUsuario(user.id);
-
-                    // Limpar carrinho no contexto (estado local)
-                    clearCart();
-
-                    // Após limpar carrinho e antes do setTimeout
-                    setCheckoutFinalizado(true);
-                    // Simular pagamento automático - mostrar sucesso
-                    setAlertConfig({
-                      isOpen: true,
-                      title: "Pedido Realizado com Sucesso! 🎉",
-                      message: `Seu pedido #${
-                        pedido.numero
-                      } foi criado e o pagamento foi processado automaticamente.\n\nTotal: R$ ${total.toFixed(
-                        2
-                      )}\n\nVocê pode acompanhar o status do seu pedido na página de histórico.`,
-                      type: "success",
-                    });
-
-                    // Redirecionar para pedidos após 3 segundos
-                    setTimeout(() => {
-                      closeAlert();
-                      router.push("/pedidos");
-                    }, 3000);
-                  }
-                }}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <span className="text-2xl">&times;</span>
-              </button>
+              <h2 className="text-xl font-bold bg-white text-gray-800">
+                Dados do Pagamento
+              </h2>
             </div>
 
             <div className="mb-4">
               <div className="flex space-x-1 rounded-xl bg-gray-100 p-1">
+                {pedido?.pagamento_tipo === "PIX" && (
                 <button
                   onClick={() => setActiveTab("pix")}
                   className={`w-full rounded-lg py-2.5 text-sm font-medium leading-5 
@@ -496,44 +548,47 @@ export default function Carrinho() {
                 >
                   PIX
                 </button>
+                )}
                 {pedido?.pagamento_tipo === "BOLETO" && (
-                <button
-                  onClick={() => setActiveTab("boleto")}
-                  className={`w-full rounded-lg py-2.5 text-sm font-medium leading-5 
+                  <button
+                    onClick={() => setActiveTab("boleto")}
+                    className={`w-full rounded-lg py-2.5 text-sm font-medium leading-5 
                     ${
                       activeTab === "boleto"
                         ? "bg-white text-blue-700 shadow"
                         : "text-gray-600 hover:text-gray-800"
                     }`}
-                >
-                  Boleto
-                </button>
-              )}
+                  >
+                    Boleto
+                  </button>
+                )}
               </div>
 
               <div className="mt-4">
                 {activeTab === "pix" && pedido?.pagamento_tipo === "PIX" && (
                   <div className="flex flex-col items-center space-y-4">
                     <div className="w-64 h-64">
-                    <img
-                      src={`data:image/png;base64,${pedido?.pix?.encodedImage}`}
-                      alt="QR Code PIX"
-                      className="w-full h-full"
-                    />
+                      <img
+                        src={`data:image/png;base64,${pedido?.pix?.encodedImage}`}
+                        alt="QR Code PIX"
+                        className="w-full h-full"
+                      />
                     </div>
                     <div className="text-center">
-                    <p className="font-semibold mb-2">
-                      Vencimento:{" "}
-                      {new Date(pedido?.pix?.expirationDate).toLocaleDateString("pt-BR")}
-                    </p>  
+                      <p className="font-semibold mb-2 bg-white text-gray-800">
+                        Vencimento:{" "}
+                        {new Date(
+                          pedido?.pix?.expirationDate
+                        ).toLocaleDateString("pt-BR")}
+                      </p>
                       <p className="text-sm mb-2">Copie o código abaixo:</p>
                       <div className="relative">
-                      <input
-                        readOnly
-                        className="w-full p-2 border border-gray-300 rounded bg-white text-gray-800"
-                        type="text"
-                        value={pedido?.pix?.payload}
-                      />
+                        <input
+                          readOnly
+                          className="w-full p-2 border border-gray-300 rounded bg-white text-gray-800"
+                          type="text"
+                          value={pedido?.pix?.payload}
+                        />
 
                         <button
                           onClick={() =>
@@ -548,41 +603,59 @@ export default function Carrinho() {
                   </div>
                 )}
 
-                {activeTab === "boleto" && pedido?.pagamento_tipo === "BOLETO" && (
-                  <div className="flex flex-col space-y-4">
-                    <div className="text-center">
-                      <a
-                        href={pedido?.boleto?.bankSlipUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                      >
-                        Visualizar Boleto
-                      </a>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm mb-2">Linha Digitável:</p>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          readOnly
-                          value={pedido?.boleto?.identificationField}
-                          className="w-full p-2 border rounded bg-gray-50"
-                        />
-                        <button
-                          onClick={() =>
-                            navigator.clipboard.writeText(
-                              pedido?.boleto?.identificationField
-                            )
-                          }
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800"
-                        >
-                          Copiar
-                        </button>
+                {activeTab === "boleto" &&
+                  pedido?.pagamento_tipo === "BOLETO" && (
+                    <div className="flex flex-col space-y-4">
+                      <div className="text-center space-y-4">
+                        <div className="flex justify-center space-x-4">
+                          <a
+                            href={pedido?.boleto?.bankSlipUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                          >
+                            Abrir em Nova Aba
+                          </a>
+                          <button
+                            onClick={() => setShowEmbedBoleto(prev => !prev)}
+                            className="inline-block bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+                          >
+                            {showEmbedBoleto ? 'Ocultar Boleto' : 'Visualizar Aqui'}
+                          </button>
+                        </div>
+                        {showEmbedBoleto && (
+                          <div className="w-full h-[600px] border border-gray-300 rounded">
+                            <iframe
+                              src={pedido?.boleto?.bankSlipUrl}
+                              className="w-full h-full"
+                              title="Boleto"
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm mb-2">Linha Digitável:</p>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            readOnly
+                            value={pedido?.boleto?.identificationField}
+                            className="w-full p-2 border rounded bg-white text-gray-800"
+                          />
+                          <button
+                            onClick={() =>
+                              navigator.clipboard.writeText(
+                                pedido?.boleto?.identificationField
+                              )
+                            }
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800"
+                          >
+                            Copiar
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </div>
             </div>
           </div>

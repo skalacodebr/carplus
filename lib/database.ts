@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import { createPayment, createOrUpdateCustomer, getPixQrCode } from "@/lib/asaas";
+import { createPayment, createOrUpdateCustomer, getPixQrCode, checkPaymentStatus } from "@/lib/asaas";
 
 // Funções para produtos
 export async function getProdutos() {
@@ -300,7 +300,7 @@ export async function criarPedidoNovo(
   valorTotal: number,
   frete: number,
   tipoEntrega: string,
-  metodoPagamento: string
+  metodoPagamento: string,
 ) {
   try {
     console.log("Iniciando criação do pedido para usuário:", userId);
@@ -411,7 +411,7 @@ export async function criarPedidoNovo(
       value: Number(valorTotal) + Number(frete),
       dueDate: "2025-07-29",
       externalReference: pedido.id.toString(),
-      description: `Pedido #${pedido.id}`,
+      description: `#${numeroPedido}`,
     };
 
     if (metodoPagamento === "CREDIT_CARD") {
@@ -1093,6 +1093,28 @@ export async function getUsuarioIdRevendedor(revendedorId: number) {
     return { data: data.usuario_id, error: null };
   } catch (error) {
     console.error("Erro ao buscar usuario_id do revendedor:", error);
+    return { data: null, error };
+  }
+}
+
+
+export async function checkStatusPedido(
+  id: string
+) {
+  try {
+    console.log("Iniciando criação do pedido para usuário:", id);    
+
+    if (!id) {
+      throw new Error("ID do pagamento não encontrado");
+    }
+
+    const status = await checkPaymentStatus(id);
+
+    console.log("Status do pagamento:", status);
+
+    return { data: status, error: null };
+  } catch (error) {
+    console.error("Erro ao verificar status do pagamento:", error);
     return { data: null, error };
   }
 }

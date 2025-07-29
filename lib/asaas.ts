@@ -145,7 +145,7 @@ export async function getPaymentLink(paymentId: string): Promise<string> {
 // Verificar status de pagamento
 export async function checkPaymentStatus(paymentId: string): Promise<string> {
   try {
-    const payment = await asaasRequest(`/payments/${paymentId}`)
+    const payment = await asaasRequest(`/payments/${paymentId}/status`, "GET", null)
     return payment.status
   } catch (error) {
     console.error("Erro ao verificar status do pagamento:", error)

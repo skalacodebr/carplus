@@ -69,38 +69,23 @@ export interface AsaasPixQrCode {
   expirationDate: string
 }
 
-// Configuração da API
-const ASAAS_API_URL = process.env.ASAAS_API_URL || "https://sandbox.asaas.com/api/v3"
-const ASAAS_API_KEY = process.env.ASAAS_API_KEY || ""
-
 // Função para fazer requisições à API do Asaas
-async function asaasRequest(endpoint: string, method = "GET", data?: any) {
+async function asaasRequest(endpoint: string, method = "POST", data?: any) {
   try {
-    const url = `${ASAAS_API_URL}${endpoint}`
-    const headers = {
-      "Content-Type": "application/json",
-      access_token: ASAAS_API_KEY,
-    }
+    const response = await fetch("/api/asaas/proxy", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ endpoint, method, data }), // <-- mantemos data agrupado
+    });
 
-    const options: RequestInit = {
-      method,
-      headers,
-      body: data ? JSON.stringify(data) : undefined,
-    }
-
-    const response = await fetch(url, options)
-    const responseData = await response.json()
-
-    if (!response.ok) {
-      throw new Error(responseData.errors?.[0]?.description || "Erro na requisição ao Asaas")
-    }
-
-    return responseData
+    const responseData = await response.json();
+    return responseData;
   } catch (error) {
-    console.error("Erro na requisição ao Asaas:", error)
-    throw error
+    console.error("Erro na requisição Asaas:", error);
+    return { error: true, message: error.message };
   }
 }
+
 
 // Funções para interagir com a API do Asaas
 
@@ -108,12 +93,13 @@ async function asaasRequest(endpoint: string, method = "GET", data?: any) {
 export async function createOrUpdateCustomer(customerData: AsaasCustomer): Promise<AsaasCustomer> {
   // Verificar se o cliente já existe pelo CPF/CNPJ
   try {
+    console.log("Verificando cliente no Asaas:", customerData)
     const searchResult = await asaasRequest(`/customers?cpfCnpj=${customerData.cpfCnpj}`)
 
     if (searchResult.data && searchResult.data.length > 0) {
       // Cliente já existe, atualizar
       const existingCustomer = searchResult.data[0]
-      return await asaasRequest(`/customers/${existingCustomer.id}`, "POST", customerData)
+      return await asaasRequest(`/customers/${existingCustomer.id}`, "PUT", customerData)
     } else {
       // Cliente não existe, criar
       return await asaasRequest("/customers", "POST", customerData)

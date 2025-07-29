@@ -1,4 +1,5 @@
 import { supabase } from "./supabase"
+import { createPayment, createOrUpdateCustomer } from "@/lib/asaas";
 
 // Funções para produtos
 export async function getProdutos() {
@@ -335,7 +336,45 @@ export async function criarPedidoNovo(
       throw pedidoError
     }
 
-    console.log("Pedido criado com sucesso:", pedido)
+    const user = await getUserInfo(clienteId.toString())
+    console.log("User:", user)
+
+    if (!user.data) {
+      throw new Error("Usuário não encontrado")
+    }
+
+    if (!user.data?.nome || !user.data?.email || !user.data?.telefone || !user.data?.cpf ) {
+      throw new Error("Dados do usuário incompletos")
+    }
+
+    const cliente = await createOrUpdateCustomer({
+      name: user.data?.nome,
+      email: user.data?.email,
+      phone: user.data?.telefone,
+      mobilePhone: user.data?.telefone,
+      cpfCnpj: user.data?.cpf,
+      postalCode: user.data?.cep,
+      address: user.data?.rua,
+      addressNumber: user.data?.numero,
+      complement: user.data?.complemento,
+      province: user.data?.bairro,
+      city: user.data?.cidade,
+      state: user.data?.uf,
+      externalReference: user.data?.id.toString(),
+    })
+
+    console.log("Cliente criado:", cliente)
+
+    const pagamento = await createPayment({
+      billingType: "PIX",
+      customer: "cus_000006888750",
+      value: 20,
+      dueDate: "2025-07-29",
+      externalReference: pedido.id.toString(),
+      description: `Pedido #${pedido.id}`,
+    });
+
+    console.log("Pagamento criado:", pagamento);
 
     // Registrar o status inicial no histórico
     await registrarMudancaStatus(pedido.id, null, statusInicial, "Pedido criado", null)
@@ -875,7 +914,7 @@ export async function getRevendedoresParaProdutos(produtoNomes: string[]) {
 export async function getUserInfo(userId: string) {
   const { data, error } = await supabase
     .from("usuarios")
-    .select("id, nome, email, cidade, uf, cep, rua, bairro, complemento, numero")
+    .select("id, nome, email, cpf, telefone, cidade, uf, cep, rua, bairro, complemento, numero")
     .eq("id", userId)
     .single()
 

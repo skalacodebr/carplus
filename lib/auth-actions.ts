@@ -106,12 +106,27 @@ export async function serverSignUp(email: string, password: string, userData: an
 }
 
 // Server action for sign in
-export async function serverSignIn(email: string, password: string) {
+export async function serverSignIn(emailOrPhone: string, password: string) {
   try {
+    // Check if it's a phone number (remove formatting)
+    const cleanedInput = emailOrPhone.replace(/\D/g, "")
+    const isPhone = cleanedInput.length >= 10 && cleanedInput.length <= 11
+
     // Get user from the database
-    const { data: user, error } = await supabase.from("usuarios").select("*").eq("email", email).single()
+    let query = supabase.from("usuarios").select("*")
+    
+    if (isPhone) {
+      // If it's a phone, search by phone
+      query = query.eq("telefone", emailOrPhone)
+    } else {
+      // Otherwise, search by email
+      query = query.eq("email", emailOrPhone)
+    }
+    
+    const { data: user, error } = await query.single()
 
     if (error || !user) {
+      console.log("Usuário não encontrado:", { emailOrPhone, isPhone, error })
       return {
         data: null,
         error: { message: "Credenciais inválidas" },
@@ -132,6 +147,9 @@ export async function serverSignIn(email: string, password: string) {
 
     // Set the user ID cookie
     const cookieStore = await cookies()
+    
+    console.log("Tentando definir cookie para userId:", user.id)
+    
     cookieStore.set({
       name: "userId",
       value: user.id.toString(), // Convert to string to ensure compatibility
@@ -142,7 +160,7 @@ export async function serverSignIn(email: string, password: string) {
       sameSite: "lax", // Add sameSite for better security
     })
 
-    console.log("Cookie set successfully")
+    console.log("Cookie set successfully for user:", user.id)
 
     // Return the user data without the password
     const userWithoutPassword = { ...user, senha: undefined }
@@ -198,14 +216,21 @@ export async function serverResetPassword(email: string) {
 export async function serverGetCurrentUser() {
   try {
     // Get the user ID from the cookie
-    const userId = cookies().get("userId")?.value
+    const cookieStore = cookies()
+    const userIdCookie = cookieStore.get("userId")
+    const userId = userIdCookie?.value
+
+    console.log("Getting current user - Cookie found:", { userId, cookieExists: !!userIdCookie })
 
     if (!userId) {
+      console.log("No userId cookie found")
       return { user: null, error: null }
     }
 
     // Get the user from the database
     const { data: user, error } = await supabase.from("usuarios").select("*").eq("id", userId).single()
+
+    console.log("User query result:", { userId, found: !!user, error })
 
     if (error) {
       throw error

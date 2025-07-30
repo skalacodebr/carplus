@@ -308,7 +308,13 @@ export default function Dashboard() {
   useEffect(() => {
     // Verificar se o usuário está autenticado
     if (!authLoading && !user) {
+      console.log("Dashboard: User not authenticated, redirecting to login", { authLoading, user })
       router.push("/login")
+      return
+    }
+    
+    if (!authLoading && user) {
+      console.log("Dashboard: User authenticated", { userId: user.id, userName: user.nome })
     }
 
     // Atualizar contagem do carrinho
@@ -479,6 +485,21 @@ export default function Dashboard() {
 
   const navigateToCart = () => {
     router.push("/carrinho")
+  }
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center bg-[#2C2B34] px-5">
+        <div className="text-center">
+          <div className="mb-4">
+            <Image src="/images/car-logo-complete.png" alt="CAR+ Logo" width={280} height={100} priority />
+          </div>
+          <p className="text-white mb-8">Carregando...</p>
+          <div className="w-16 h-16 border-t-4 border-[#ED1C24] border-solid rounded-full animate-spin mx-auto"></div>
+        </div>
+      </main>
+    )
   }
 
   // Update the calculadora tab content to include the altura dropdown

@@ -35,7 +35,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function refreshUser() {
     try {
       setLoading(true)
+      console.log("AuthContext: Refreshing user...")
       const { user, error } = await getCurrentUser()
+
+      console.log("AuthContext: User refresh result:", { user: !!user, error })
 
       if (error) {
         throw error
@@ -45,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error("Erro ao atualizar usuário:", err)
       setError(err as Error)
+      setUser(null)
     } finally {
       setLoading(false)
     }

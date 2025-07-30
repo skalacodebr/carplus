@@ -7,6 +7,7 @@ import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { isAuthenticated } from "@/lib/client-cookies"
+import { useAuth } from "@/context/auth-context"
 
 export default function Login() {
   const [email, setEmail] = useState("")
@@ -21,13 +22,15 @@ export default function Login() {
   const [redirecting, setRedirecting] = useState(false)
 
   const router = useRouter()
+  const { refreshUser } = useAuth()
 
   // Check if user is already authenticated
   useEffect(() => {
-    if (isAuthenticated()) {
-      console.log("User is already authenticated, redirecting to dashboard")
-      router.push("/dashboard")
-    }
+    // Comentado para evitar loop infinito
+    // if (isAuthenticated()) {
+    //   console.log("User is already authenticated, redirecting to dashboard")
+    //   router.push("/dashboard")
+    // }
   }, [router])
 
   // Função para formatar telefone: (XX) XXXXX-XXXX
@@ -139,13 +142,17 @@ export default function Login() {
         // Import the function for login
         const { signIn } = await import("@/lib/auth")
 
+        console.log("Tentando fazer login com:", { email, senha: "***" })
+
         // Call the login function
         const { data, error } = await signIn(email, senha)
+
+        console.log("Resposta do login:", { data, error })
 
         if (error) {
           console.error("Erro ao fazer login:", error)
           // Show error message
-          alert(`Erro ao fazer login: ${error.message}`)
+          alert(`Erro ao fazer login: ${error.message || "Erro desconhecido"}`)
           return
         }
 
@@ -155,7 +162,11 @@ export default function Login() {
         // Set redirecting state to show feedback
         setRedirecting(true)
 
-        // Redirecionar após login bem-sucedido
+        // Atualizar o contexto de autenticação antes de redirecionar
+        console.log("Atualizando contexto de autenticação...")
+        await refreshUser()
+
+        // Aguardar um pouco mais para garantir que o cookie seja definido
         setTimeout(() => {
           console.log("Redirecionando para dashboard...")
           router.push("/dashboard")

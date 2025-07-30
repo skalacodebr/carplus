@@ -22,12 +22,12 @@ type PedidoDetalhado = {
     qtd: number
     valor_unitario: number | null
     pacote_id: string | number
-    pacote: {
+    pacotes: {
       id: number
       nome: string
       cor: string
       imagem: string | null
-    }
+    } | null
   }[]
 }
 
@@ -55,38 +55,58 @@ export default function PedidoDetalhe({ params }: { params: { id: string } }) {
 
       const { supabase } = await import("@/lib/supabase")
 
-      // Primeiro, buscar o cliente_id baseado no user_id
-      const { data: cliente, error: clienteError } = await supabase
-        .from("clientes")
-        .select("id")
-        .eq("usuario_id", user!.id)
-        .single()
-
-      if (clienteError) throw clienteError
-
-      // Buscar o pedido usando o cliente_id
-      const { data, error } = await supabase
+      // Primeiro buscar o pedido
+      const { data: pedidoData, error: pedidoError } = await supabase
         .from("pedidos")
-        .select(`
-          *,
-          pedido_itens:pedido_itens(
-            *,
-            pacote:pacotes(
-              id,
-              nome,
-              cor,
-              imagem
-            )
-          )
-        `)
+        .select("*")
         .eq("id", params.id)
-        .eq("cliente_id", cliente.id)
+        .eq("cliente_id", user!.id)
         .single()
 
-      if (error) throw error
+      if (pedidoError) throw pedidoError
 
-      console.log("Dados do pedido:", data)
-      setPedido(data)
+      // Depois buscar os itens do pedido
+      console.log("Buscando itens para pedido_id:", params.id, "tipo:", typeof params.id)
+      const { data: itensData, error: itensError } = await supabase
+        .from("pedido_itens")
+        .select("*")
+        .eq("pedido_id", parseInt(params.id))
+
+      console.log("Itens encontrados:", itensData)
+      if (itensError) {
+        console.error("Erro ao buscar itens:", itensError)
+        throw itensError
+      }
+
+      // Para cada item, buscar os dados do pacote
+      const itensComPacotes = await Promise.all(
+        (itensData || []).map(async (item) => {
+          if (item.pacote_id) {
+            const { data: pacoteData } = await supabase
+              .from("pacotes")
+              .select("id, nome, cor, imagem")
+              .eq("id", item.pacote_id)
+              .single()
+            
+            return {
+              ...item,
+              pacotes: pacoteData
+            }
+          }
+          return {
+            ...item,
+            pacotes: null
+          }
+        })
+      )
+
+      const pedidoCompleto = {
+        ...pedidoData,
+        pedido_itens: itensComPacotes
+      }
+
+      console.log("Dados do pedido:", pedidoCompleto)
+      setPedido(pedidoCompleto)
     } catch (error) {
       console.error("Erro ao buscar pedido:", error)
       alert("Não foi possível carregar os detalhes do pedido.")
@@ -300,16 +320,16 @@ export default function PedidoDetalhe({ params }: { params: { id: string } }) {
               <div key={item.id} className="flex items-center bg-[#3A3942] rounded-lg p-3">
                 <div className="w-16 h-16 bg-[#2C2B34] rounded-md overflow-hidden mr-3">
                   <Image
-                    src={item.pacote?.imagem || "/placeholder.svg"}
-                    alt={item.pacote?.nome || "Pacote"}
+                    src={item.pacotes?.imagem || "/placeholder.svg"}
+                    alt={item.pacotes?.nome || "Pacote"}
                     width={64}
                     height={64}
                     className="object-cover w-full h-full"
                   />
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-medium">{item.pacote?.nome || `Pacote #${item.pacote_id}`}</h4>
-                  <p className="text-sm text-gray-400">{item.pacote?.cor || "Microesferas Premium"}</p>
+                  <h4 className="font-medium">{item.pacotes?.nome || `Pacote #${item.pacote_id}`}</h4>
+                  <p className="text-sm text-gray-400">{item.pacotes?.cor || "Microesferas Premium"}</p>
                   <div className="flex justify-between items-center mt-1">
                     <span className="text-sm">Qtd: {item.qtd || 0}</span>
                     <span className="font-bold">R$ {formatCurrency((item.valor_unitario || 0) * (item.qtd || 0))}</span>

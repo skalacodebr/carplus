@@ -1,7 +1,8 @@
 {
-  "/login/page": "app/login/page.js",
-  "/pedidos/[id]/page": "app/pedidos/[id]/page.js",
-  "/pedidos/page": "app/pedidos/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
   "/carrinho/page": "app/carrinho/page.js",
-  "/dashboard/page": "app/dashboard/page.js"
+  "/historico/page": "app/historico/page.js",
+  "/pedidos/page": "app/pedidos/page.js",
+  "/pedidos/[id]/page": "app/pedidos/[id]/page.js"
 }

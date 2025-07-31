@@ -21,25 +21,35 @@
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/page.js"
     ],
+    "/historico/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/historico/page.js"
+    ],
     "/pedidos/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/pedidos/page.js"
+    ],
+    "/pedidos/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/pedidos/[id]/page.js"
     ],
     "/carrinho/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/carrinho/page.js"
     ],
-    "/perfil/page": [
+    "/api/asaas/proxy/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/perfil/page.js"
+      "static/chunks/app/api/asaas/proxy/route.js"
     ],
-    "/pedidos/[id]/page": [
+    "/_not-found/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/pedidos/[id]/page.js"
+      "static/chunks/app/_not-found/page.js"
     ]
   }
 }

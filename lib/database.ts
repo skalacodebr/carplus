@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import { createPayment, createOrUpdateCustomer, getPixQrCode, checkPaymentStatus } from "@/lib/asaas";
+import { createPayment, createOrUpdateCustomer, getPixQrCode, checkPaymentStatus, cancelPayment } from "@/lib/asaas";
 
 // Funções para produtos
 export async function getProdutos() {
@@ -342,30 +342,6 @@ export async function criarPedidoNovo(
         : "aguardando_aceite";
 
     // Criar o pedido usando o schema correto
-    const { data: pedido, error: pedidoError } = await supabase
-      .from("pedidos")
-      .insert([
-        {
-          cliente_id: clienteId, // ID do usuário que fez a compra
-          revendedor_id: revendedorUsuarioId, // ID do usuário revendedor (da tabela usuarios)
-          numero: numeroPedido,
-          frete: frete,
-          valor_total: valorTotal,
-          pagamento_tipo: metodoPagamento,
-          tipo_entrega: tipoEntrega,
-          status: "pago", // Status de pagamento
-          status_detalhado: statusInicial, // Status detalhado baseado no tipo de entrega
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ])
-      .select()
-      .single();
-
-    if (pedidoError) {
-      console.error("Erro ao criar pedido:", pedidoError);
-      throw pedidoError;
-    }
 
     const user = await getUserInfo(clienteId.toString());
     console.log("User:", user);
@@ -409,8 +385,7 @@ export async function criarPedidoNovo(
         | "UNDEFINED",
       customer: cliente.id,
       value: Number(valorTotal) + Number(frete),
-      dueDate: "2025-07-29",
-      externalReference: pedido.id.toString(),
+      dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split("T")[0],
       description: `#${numeroPedido}`,
     };
 
@@ -470,6 +445,32 @@ export async function criarPedidoNovo(
     if(dadosPagamento) {
       pix = dadosPagamento.pix;
       boleto = dadosPagamento.bankSlip;
+    }
+
+    const { data: pedido, error: pedidoError } = await supabase
+      .from("pedidos")
+      .insert([
+        {
+          cliente_id: clienteId, // ID do usuário que fez a compra
+          revendedor_id: revendedorUsuarioId, // ID do usuário revendedor (da tabela usuarios)
+          numero: numeroPedido,
+          frete: frete,
+          valor_total: valorTotal,
+          pagamento_tipo: metodoPagamento,
+          tipo_entrega: tipoEntrega,
+          status: "pendente", // Status de pagamento
+          status_detalhado: statusInicial, // Status detalhado baseado no tipo de entrega
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          pagamento_id: pagamento.id,
+        },
+      ])
+      .select()
+      .single();
+
+    if (pedidoError) {
+      console.error("Erro ao criar pedido:", pedidoError);
+      throw pedidoError;
     }
 
     // Registrar o status inicial no histórico
@@ -1097,7 +1098,6 @@ export async function getUsuarioIdRevendedor(revendedorId: number) {
   }
 }
 
-
 export async function checkStatusPedido(
   id: string
 ) {
@@ -1113,6 +1113,27 @@ export async function checkStatusPedido(
     console.log("Status do pagamento:", status);
 
     return { data: status, error: null };
+  } catch (error) {
+    console.error("Erro ao verificar status do pagamento:", error);
+    return { data: null, error };
+  }
+}
+
+export async function cancelarPedido(
+  id: string
+) {
+  try {
+    console.log("Iniciando criação do pedido para usuário:", id);    
+
+    if (!id) {
+      throw new Error("ID do pagamento não encontrado");
+    }
+
+    const response = await cancelPayment(id);
+
+    console.log("Status do pagamento:", response);
+
+    return { data: response, error: null };
   } catch (error) {
     console.error("Erro ao verificar status do pagamento:", error);
     return { data: null, error };

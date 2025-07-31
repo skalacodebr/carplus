@@ -1,4 +1,4 @@
-// File: /Users/guibadermann/Documents/GitHub/carplus/app/layout.tsx
+// File: C:\xampp\htdocs\GITHUB\carplus\app\layout.tsx
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

@@ -10,6 +10,7 @@ import {
   getUserInfo,
   limparCarrinhoUsuario,
   checkStatusPedido,
+  cancelarPedido,
 } from "@/lib/database";
 import CustomAlert from "@/components/custom-alert";
 import EnderecoModal, {
@@ -98,6 +99,7 @@ export default function Carrinho() {
   const pedidoRef = useRef<any>(null);
   const orderNumberRef = useRef<string | null>(null);
   const orderValueRef = useRef<number | null>(null);
+  const [pedidoCancelado, setPedidoCancelado] = useState(false);
 
   useEffect(() => {
     // Atualizar produtos quando os itens do carrinho mudarem
@@ -336,7 +338,7 @@ export default function Carrinho() {
         total,
         frete,
         tipoEntrega,
-        billingTypeMap[metodoPagamento], // Aqui fazemos o mapeamento
+        billingTypeMap[metodoPagamento] // Aqui fazemos o mapeamento
       );
 
       if (error) {
@@ -406,54 +408,63 @@ export default function Carrinho() {
   useEffect(() => {
     const intervalId = setInterval(async () => {
       if (pedidoRef.current) {
-        try {
-          const statusResponse = await checkStatusPedido(pedidoRef.current);
-          console.log("Status do pedido:", statusResponse);
+      try {
+        const statusResponse = await checkStatusPedido(pedidoRef.current);
+        console.log("Status do pedido:", statusResponse);
 
           // Atualize o estado do pedido se necessário:
-          if (statusResponse?.data !== pedido?.status) {
-            setPedido((prev: any) => ({
-              ...prev,
-              status: statusResponse.data,
-            }));
-          }
+        if (statusResponse?.data !== pedido?.status) {
+          setPedido((prev: any) => ({
+            ...prev,
+            status: statusResponse.data,
+          }));
+        }
 
           // Se o status "RECEIVED", você pode limpar o intervalo
-          if (statusResponse.data === "RECEIVED") {
-            clearInterval(intervalId);
-            console.log("Status final alcançado, parando verificação.");
-            setShowModalPagamento(false);
-            if (user?.id) {
-              await limparCarrinhoUsuario(user.id);
-            }
+        if (statusResponse.data === "RECEIVED") {
+          clearInterval(intervalId);
+          console.log("Status final alcançado, parando verificação.");
+          setShowModalPagamento(false);
 
-            clearCart();
+          setAlertConfig({
+            isOpen: true,
+            title: "Pedido Realizado com Sucesso! 🎉",
+            message: `Seu pedido #${
+              orderNumberRef.current || "N/A"
+            } foi criado e o pagamento foi processado automaticamente.\n\nTotal: R$ ${orderValueRef.current?.toFixed(
+              2
+            )}\n\nVocê pode acompanhar o status do seu pedido na página de histórico.`,
+            type: "success",
+          });
 
-            setAlertConfig({
-              isOpen: true,
-              title: "Pedido Realizado com Sucesso! 🎉",
-              message: `Seu pedido #${
-                orderNumberRef.current || "N/A"
-              } foi criado e o pagamento foi processado automaticamente.\n\nTotal: R$ ${orderValueRef.current?.toFixed(
-                2
-              )}\n\nVocê pode acompanhar o status do seu pedido na página de histórico.`,
-              type: "success",
-            });
-
-            // Redirecionar para pedidos após 3 segundos
-            setTimeout(() => {
-              closeAlert();
-              router.push("/pedidos");
-            }, 3000);
-          }
-        } catch (error) {
-          console.error("Erro ao verificar status do pedido:", error);
+          // Redirecionar para pedidos após 3 segundos
+          setTimeout(() => {
+            closeAlert();
+            router.push("/pedidos");
+          }, 3000);
         }
+
+        if (statusResponse.data === "excluido") {
+          clearInterval(intervalId);
+          console.log("Status final alcançado, parando verificação.");
+          setShowModalPagamento(false);
+
+          // Redirecionar para pedidos após 3 segundos
+          setTimeout(() => {
+            closeAlert();
+            router.push("/dashboard");
+          }, 5000);
+        }
+      } catch (error) {
+        console.error("Erro ao verificar status do pedido:", error);
+      }
       }
     }, 5000); // 5000ms = 5s
 
     // Limpa o intervalo ao desmontar o componente
-    return () => clearInterval(intervalId);
+    return () => {
+      clearInterval(intervalId);    
+    };
   }, []);
 
   const handleOpenEnderecoModal = () => {
@@ -492,6 +503,36 @@ export default function Carrinho() {
 
   const [showEmbedBoleto, setShowEmbedBoleto] = useState(false);
 
+  const handleCancelarCompra = async (id: string) => {
+    try {
+      setShowModalPagamento(false);
+      setPedidoCancelado(true);
+      const response = await cancelarPedido(id);
+      if (response.error) {
+        setAlertConfig({
+          isOpen: true,
+          title: "Erro ao cancelar o pedido",
+          message: "Erro ao cancelar o pedido",
+          type: "error",
+        });
+      } else {
+        setAlertConfig({
+          isOpen: true,
+          title: "Pedido cancelado com sucesso",
+          message: "Pedido cancelado com sucesso",
+          type: "success",
+        });
+      }
+    } catch (error) {
+      setAlertConfig({
+        isOpen: true,
+        title: "Erro ao cancelar o pedido",
+        message: "Erro ao cancelar o pedido",
+        type: "error",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <main className="flex flex-col min-h-screen bg-[#2C2B34] text-white">
@@ -527,33 +568,51 @@ export default function Carrinho() {
       {/* Modal de Pagamento */}
       {showModalPagamento && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+          <div className="bg-[#2C2B34] rounded-[15px] p-6 max-w-2xl w-full mx-4">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold bg-white text-gray-800">
+              <h2 className="text-xl font-bold text-white">
                 Dados do Pagamento
               </h2>
+              <button
+                onClick={() => setShowModalPagamento(false)}
+                className="text-gray-500 hover:text-gray-700 transition-colors"
+                aria-label="Fechar modal"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
             </div>
 
             <div className="mb-4">
               <div className="flex space-x-1 rounded-xl bg-gray-100 p-1">
                 {pedido?.pagamento_tipo === "PIX" && (
-                <button
-                  onClick={() => setActiveTab("pix")}
-                  className={`w-full rounded-lg py-2.5 text-sm font-medium leading-5 
-                    ${
+                  <button
+                    onClick={() => setActiveTab("pix")}
+                    className={`w-full rounded-lg py-2.5 text-sm font-medium leading-5 ${
                       activeTab === "pix"
                         ? "bg-white text-blue-700 shadow"
                         : "text-gray-600 hover:text-gray-800"
                     }`}
-                >
-                  PIX
-                </button>
+                  >
+                    PIX
+                  </button>
                 )}
                 {pedido?.pagamento_tipo === "BOLETO" && (
                   <button
                     onClick={() => setActiveTab("boleto")}
-                    className={`w-full rounded-lg py-2.5 text-sm font-medium leading-5 
-                    ${
+                    className={`w-full rounded-lg py-2.5 text-sm font-medium leading-5 ${
                       activeTab === "boleto"
                         ? "bg-white text-blue-700 shadow"
                         : "text-gray-600 hover:text-gray-800"
@@ -571,32 +630,39 @@ export default function Carrinho() {
                       <img
                         src={`data:image/png;base64,${pedido?.pix?.encodedImage}`}
                         alt="QR Code PIX"
-                        className="w-full h-full"
+                        className="w-full h-full rounded-[15px]"
                       />
                     </div>
-                    <div className="text-center">
-                      <p className="font-semibold mb-2 bg-white text-gray-800">
+                    <div className="text-center w-full">
+                      <p className="font-semibold mb-2 text-gray-800">
                         Vencimento:{" "}
                         {new Date(
                           pedido?.pix?.expirationDate
                         ).toLocaleDateString("pt-BR")}
                       </p>
                       <p className="text-sm mb-2">Copie o código abaixo:</p>
-                      <div className="relative">
+                      <div className="space-y-3">
                         <input
                           readOnly
                           className="w-full p-2 border border-gray-300 rounded bg-white text-gray-800"
                           type="text"
                           value={pedido?.pix?.payload}
                         />
-
                         <button
                           onClick={() =>
                             navigator.clipboard.writeText(pedido?.pix?.payload)
                           }
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800"
+                          className="w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                         >
-                          Copiar
+                          Copiar Código PIX
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleCancelarCompra(pedido?.pagamentoId)
+                          }
+                          className="w-full py-2 px-4 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                        >
+                          Cancelar Compra
                         </button>
                       </div>
                     </div>
@@ -612,15 +678,17 @@ export default function Carrinho() {
                             href={pedido?.boleto?.bankSlipUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                            className="flex-1 py-2 px-4 bg-blue-600 text-white text-center rounded hover:bg-blue-700 transition-colors"
                           >
                             Abrir em Nova Aba
                           </a>
                           <button
-                            onClick={() => setShowEmbedBoleto(prev => !prev)}
-                            className="inline-block bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+                            onClick={() => setShowEmbedBoleto((prev) => !prev)}
+                            className="flex-1 py-2 px-4 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
                           >
-                            {showEmbedBoleto ? 'Ocultar Boleto' : 'Visualizar Aqui'}
+                            {showEmbedBoleto
+                              ? "Ocultar Boleto"
+                              : "Visualizar Aqui"}
                           </button>
                         </div>
                         {showEmbedBoleto && (
@@ -633,26 +701,31 @@ export default function Carrinho() {
                           </div>
                         )}
                       </div>
-                      <div className="text-center">
-                        <p className="text-sm mb-2">Linha Digitável:</p>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            readOnly
-                            value={pedido?.boleto?.identificationField}
-                            className="w-full p-2 border rounded bg-white text-gray-800"
-                          />
-                          <button
-                            onClick={() =>
-                              navigator.clipboard.writeText(
-                                pedido?.boleto?.identificationField
-                              )
-                            }
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800"
-                          >
-                            Copiar
-                          </button>
-                        </div>
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          readOnly
+                          value={pedido?.boleto?.identificationField}
+                          className="w-full p-2 border rounded bg-white text-gray-800"
+                        />
+                        <button
+                          onClick={() =>
+                            navigator.clipboard.writeText(
+                              pedido?.boleto?.identificationField
+                            )
+                          }
+                          className="w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                        >
+                          Copiar Linha Digitável
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleCancelarCompra(pedido?.pagamentoId)
+                          }
+                          className="w-full py-2 px-4 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                        >
+                          Cancelar Compra
+                        </button>
                       </div>
                     </div>
                   )}

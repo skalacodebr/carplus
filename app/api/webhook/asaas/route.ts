@@ -11,10 +11,7 @@ const statusMap: Record<AsaasPaymentStatus, string> = {
   CONFIRMED: "pago",
 };
 
-async function atualizarStatusPedido(
-  novoStatus: string,
-  pagamentoId: string
-) {
+async function atualizarStatusPedido(novoStatus: string, pagamentoId: string) {
   try {
     // Buscar o pedido atual
     const { data: pedido, error: pedidoError } = await supabase
@@ -44,10 +41,10 @@ async function atualizarStatusPedido(
       .eq("id", pedido.id);
 
     if (updateError) throw updateError;
-
+      
     // Registrar a mudança no histórico
     const { error: historicoError } = await supabase
-      .from("historico_status_pedido")
+      .from("pedido_historico_status")
       .insert({
         pedido_id: pedido.id,
         status_novo: novoStatus,
@@ -58,10 +55,9 @@ async function atualizarStatusPedido(
       });
 
     if (historicoError) throw historicoError;
-
     return { success: true };
   } catch (error) {
-    console.error("Erro ao atualizar status do pedido:", error);
+    console.error("Erro ao atualizar status do pedido1:", error);
     return { success: false, error };
   }
 }
@@ -82,21 +78,36 @@ export async function POST(req: Request) {
     const novoStatus = statusMap[status] || "pendente";
 
     // Atualizar o status do pedido
-    const resultado = await atualizarStatusPedido(
-      novoStatus,
-      pagamentoId
-    );
-
+    const resultado = await atualizarStatusPedido(novoStatus, pagamentoId);
+    console.log("Resultado do atualizarStatusPedido:", resultado);
     if (!resultado.success) {
-      return NextResponse.json(
-        { error: "Erro ao atualizar status do pedido" },
-        { status: 500 }
-      );
-    }
+        const erroDetalhes = resultado.error?.details || "";
+        const erroMensagem = resultado.error?.message || "";
+      
+        const erroChaveDuplicada =
+          erroDetalhes.includes("duplicate key value") ||
+          erroMensagem.includes("duplicate key value") ||
+          erroDetalhes.includes("violates unique constraint");
+      
+        if (erroChaveDuplicada) {
+          console.error("Erro ao atualizar status do pedido (chave duplicada):", resultado.error);
+          return NextResponse.json(
+            { error: "Já existe um pagamento com esse ID" },
+            { status: 200 }
+          );
+        }
+      
+        console.error("Erro genérico ao atualizar status do pedido:", resultado.error);
+        return NextResponse.json(
+          { error: "Erro ao atualizar status do pedido" },
+          { status: 200 }
+        );
+      }
+      
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Erro no webhook:", error);
+    console.error("Erro no webhook2:", error);
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 }

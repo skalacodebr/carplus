@@ -70,7 +70,9 @@ export default function Carrinho() {
   const [metodoPagamento, setMetodoPagamento] = useState("pix");
   const [showModalPagamento, setShowModalPagamento] = useState(false);
   const [activeTab, setActiveTab] = useState<"pix" | "boleto">("pix");
+  const [modalPagamentoCartao, setModalPagamentoCartao] = useState(false);
   const [pedidoFinalizado, setPedidoFinalizado] = useState(false);
+  const [pendingPayment, setPendingPayment] = useState<string | null>(null);
   const [revendedoresPorProduto, setRevendedoresPorProduto] = useState<
     Record<string, RevendedorEstoque[]>
   >({});
@@ -100,6 +102,23 @@ export default function Carrinho() {
   const orderNumberRef = useRef<string | null>(null);
   const orderValueRef = useRef<number | null>(null);
   const [pedidoCancelado, setPedidoCancelado] = useState(false);
+
+  // Estados para os dados do cartão
+  const [cardData, setCardData] = useState({
+    number: "",
+    expiry: "",
+    cvv: "",
+    holderName: "",
+  });
+
+  // Função para atualizar os dados do cartão
+  const handleCardInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCardData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   useEffect(() => {
     // Atualizar produtos quando os itens do carrinho mudarem
@@ -178,6 +197,54 @@ export default function Carrinho() {
     buscarRevendedores();
   }, [produtos, userInfo]);
 
+  useEffect(() => {
+    const checkPendingPayment = () => {
+      // Verificar se há pagamento pendente no sessionStorage
+      const keys = Object.keys(sessionStorage);
+      for (const key of keys) {
+        try {
+          const data = JSON.parse(sessionStorage.getItem(key) || "");
+          if (data.pagamentoId) {
+            setPendingPayment(data.pagamentoId);
+            setPedido(data);
+            setShowModalPagamento(true);
+            setActiveTab(data.pagamento_tipo === "PIX" ? "pix" : "boleto");
+            break;
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+    };
+
+    // Só verificar pagamento pendente se o usuário estiver logado
+    if (user) {
+      checkPendingPayment();
+    }
+  }, [user]); // Executar quando o usuário mudar
+
+  useEffect(() => {
+    // Verificar pagamento pendente ao montar o componente
+    const checkPendingPayment = () => {
+      // Verificar se há pagamento pendente no sessionStorage
+      const keys = Object.keys(sessionStorage);
+      for (const key of keys) {
+        try {
+          const data = JSON.parse(sessionStorage.getItem(key) || "");
+          if (data.pagamentoId) {
+            setPendingPayment(data.pagamentoId);
+            setPedido(data);
+            break;
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+    };
+
+    checkPendingPayment();
+  }, []);
+
   const removerProduto = (id: string) => {
     removeItem(id);
   };
@@ -225,10 +292,28 @@ export default function Carrinho() {
     setAlertConfig((prev) => ({ ...prev, isOpen: false }));
   };
 
-  // Modificar a função handleCheckout para integrar com o Asaas
-
   // Substitua a função handleCheckout existente por esta:
   const handleCheckout = async () => {
+    if (pendingPayment) {
+      setAlertConfig({
+        isOpen: true,
+        title: "Pagamento Pendente",
+        message:
+          "Você já tem um pagamento pendente. Finalize-o antes de iniciar um novo.",
+        type: "warning",
+      });
+
+      // Mostrar o modal de pagamento com os dados do pedido pendente
+      setTimeout(() => {
+        closeAlert();
+        if (pedido) {
+          setShowModalPagamento(true);
+          setActiveTab(pedido.pagamento_tipo === "PIX" ? "pix" : "boleto");
+        }
+      }, 3000);
+      return; // Importante: retornar aqui para não continuar com o checkout
+    }
+
     if (!user) {
       setAlertConfig({
         isOpen: true,
@@ -241,7 +326,7 @@ export default function Carrinho() {
       setTimeout(() => {
         closeAlert();
         router.push("/login");
-      }, 2000);
+      }, 3000);
       return;
     }
 
@@ -293,6 +378,12 @@ export default function Carrinho() {
         });
         return;
       }
+    }
+
+    // Se o método de pagamento for cartão de crédito, mostrar o modal
+    if (metodoPagamento === "cartao") {
+      setModalPagamentoCartao(true);
+      return;
     }
 
     try {
@@ -354,6 +445,10 @@ export default function Carrinho() {
           pagamentoId,
         });
 
+        sessionStorage.setItem(pedidoData.numero, JSON.stringify(pedidoData));
+        sessionStorage.setItem(pagamentoId, JSON.stringify(pedidoData));
+        setPendingPayment(pagamentoId);
+
         console.log("pedido", pedidoData);
         setPedidoFinalizado(true);
       } else {
@@ -395,6 +490,88 @@ export default function Carrinho() {
     }
   };
 
+  // Função para processar o pagamento com cartão
+  const handleCardPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      setAlertConfig({
+        isOpen: true,
+        title: "Processando",
+        message: "Processando pagamento com cartão de crédito...",
+        type: "info",
+      });
+
+      // Importar a nova função
+      const { criarPedidoNovo, limparCarrinhoUsuario } = await import(
+        "@/lib/database"
+      );
+
+      // Pegar o primeiro revendedor
+      const primeiroRevendedor = Object.values(revendedorSelecionado)[0];
+      const revendedorId = primeiroRevendedor.revendedor.id;
+
+      // Preparar itens com informações do revendedor
+      const itensComRevendedor = produtos.map((produto) => ({
+        ...produto,
+        preco: revendedorSelecionado[produto.nome].preco,
+        pacote_id: 1,
+      }));
+
+      // Criar pedido no banco de dados
+      const { data: pedidoData, error } = await criarPedidoNovo(
+        user.id,
+        revendedorId,
+        itensComRevendedor,
+        total,
+        frete,
+        tipoEntrega,
+        billingTypeMap[metodoPagamento],
+        cardData // Enviando os dados do cartão
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      // Limpar carrinho no banco de dados
+      await limparCarrinhoUsuario(user.id);
+
+      // Limpar carrinho no contexto (estado local)
+      clearCart();
+
+      setModalPagamentoCartao(false);
+      setCheckoutFinalizado(true);
+
+      // Mostrar mensagem de sucesso
+      setAlertConfig({
+        isOpen: true,
+        title: "Pedido Realizado com Sucesso! 🎉",
+        message: `Seu pedido #${
+          pedidoData.numero
+        } foi criado e o pagamento foi processado com sucesso.\n\nTotal: R$ ${pedidoData.valor_total.toFixed(
+          2
+        )}\n\nVocê pode acompanhar o status do seu pedido na página de histórico.`,
+        type: "success",
+      });
+
+      // Redirecionar para pedidos após 3 segundos
+      setTimeout(() => {
+        closeAlert();
+        router.push("/pedidos");
+      }, 3000);
+    } catch (error) {
+      console.error("Erro ao processar pagamento:", error);
+      setAlertConfig({
+        isOpen: true,
+        title: "Erro no Pagamento",
+        message:
+          "Ocorreu um erro ao processar o pagamento. Por favor, tente novamente.",
+        type: "error",
+      });
+    }
+  };
+
   // Atualize o pedidoRef sempre que o estado "pedido" mudar
   useEffect(() => {
     if (pedido?.pagamentoId) {
@@ -408,62 +585,57 @@ export default function Carrinho() {
   useEffect(() => {
     const intervalId = setInterval(async () => {
       if (pedidoRef.current) {
-      try {
-        const statusResponse = await checkStatusPedido(pedidoRef.current);
-        console.log("Status do pedido:", statusResponse);
+        try {
+          const statusResponse = await checkStatusPedido(pedidoRef.current);
+          console.log("Status do pedido:", statusResponse);
 
           // Atualize o estado do pedido se necessário:
-        if (statusResponse?.data !== pedido?.status) {
-          setPedido((prev: any) => ({
-            ...prev,
-            status: statusResponse.data,
-          }));
-        }
+          if (statusResponse?.data !== pedido?.status) {
+            setPedido((prev: any) => ({
+              ...prev,
+              status: statusResponse.data,
+            }));
+          }
 
           // Se o status "RECEIVED", você pode limpar o intervalo
-        if (statusResponse.data === "RECEIVED") {
-          clearInterval(intervalId);
-          console.log("Status final alcançado, parando verificação.");
-          setShowModalPagamento(false);
+          if (statusResponse.data === "RECEIVED") {
+            clearInterval(intervalId);
+            console.log("Status final alcançado, parando verificação.");
+            setShowModalPagamento(false);
+            setPendingPayment(null);
 
-          setAlertConfig({
-            isOpen: true,
-            title: "Pedido Realizado com Sucesso! 🎉",
-            message: `Seu pedido #${
-              orderNumberRef.current || "N/A"
-            } foi criado e o pagamento foi processado automaticamente.\n\nTotal: R$ ${orderValueRef.current?.toFixed(
-              2
-            )}\n\nVocê pode acompanhar o status do seu pedido na página de histórico.`,
-            type: "success",
-          });
+            setAlertConfig({
+              isOpen: true,
+              title: "Pedido Realizado com Sucesso! 🎉",
+              message: `Seu pedido #${
+                orderNumberRef.current || "N/A"
+              } foi criado e o pagamento foi processado automaticamente.\n\nTotal: R$ ${orderValueRef.current?.toFixed(
+                2
+              )}\n\nVocê pode acompanhar o status do seu pedido na página de histórico.`,
+              type: "success",
+            });
 
-          // Redirecionar para pedidos após 3 segundos
-          setTimeout(() => {
-            closeAlert();
-            router.push("/pedidos");
-          }, 3000);
+            // Redirecionar para pedidos após 3 segundos
+            setTimeout(() => {
+              closeAlert();
+              router.push("/pedidos");
+            }, 3000);
+          }
+
+          if (statusResponse.data === "excluido") {
+            clearInterval(intervalId);
+            console.log("Status final alcançado, parando verificação.");
+            setShowModalPagamento(false);            
+          }
+        } catch (error) {
+          console.error("Erro ao verificar status do pedido:", error);
         }
-
-        if (statusResponse.data === "excluido") {
-          clearInterval(intervalId);
-          console.log("Status final alcançado, parando verificação.");
-          setShowModalPagamento(false);
-
-          // Redirecionar para pedidos após 3 segundos
-          setTimeout(() => {
-            closeAlert();
-            router.push("/dashboard");
-          }, 5000);
-        }
-      } catch (error) {
-        console.error("Erro ao verificar status do pedido:", error);
-      }
       }
     }, 5000); // 5000ms = 5s
 
     // Limpa o intervalo ao desmontar o componente
     return () => {
-      clearInterval(intervalId);    
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -516,6 +688,23 @@ export default function Carrinho() {
           type: "error",
         });
       } else {
+        // Limpar dados do pedido do sessionStorage
+        const keys = Object.keys(sessionStorage);
+        for (const key of keys) {
+          try {
+            const data = JSON.parse(sessionStorage.getItem(key) || "");
+            if (data.pagamentoId === id) {
+              sessionStorage.removeItem(key);
+            }
+          } catch (e) {
+            continue;
+          }
+        }
+
+        // Limpar estados
+        setPendingPayment(null);
+        setPedido(null);
+
         setAlertConfig({
           isOpen: true,
           title: "Pedido cancelado com sucesso",
@@ -731,6 +920,107 @@ export default function Carrinho() {
                   )}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Cartão de Crédito */}
+      {modalPagamentoCartao && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-[#2C2B34] rounded-[15px] p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-white">Dados do Cartão</h2>
+              <button
+                onClick={() => setModalPagamentoCartao(false)}
+                className="text-gray-500 hover:text-gray-700 transition-colors"
+                aria-label="Fechar modal"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <form className="space-y-4" onSubmit={handleCardPayment}>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Número do Cartão
+                </label>
+                <input
+                  type="text"
+                  name="number"
+                  value={cardData.number}
+                  onChange={handleCardInputChange}
+                  className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none"
+                  placeholder="1234 5678 9012 3456"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Validade
+                  </label>
+                  <input
+                    type="text"
+                    name="expiry"
+                    value={cardData.expiry}
+                    onChange={handleCardInputChange}
+                    className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none"
+                    placeholder="MM/AA"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    CVV
+                  </label>
+                  <input
+                    type="text"
+                    name="cvv"
+                    value={cardData.cvv}
+                    onChange={handleCardInputChange}
+                    className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none"
+                    placeholder="123"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Nome no Cartão
+                </label>
+                <input
+                  type="text"
+                  name="holderName"
+                  value={cardData.holderName}
+                  onChange={handleCardInputChange}
+                  className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none"
+                  placeholder="Nome como está no cartão"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              >
+                Finalizar Pagamento
+              </button>
+            </form>
           </div>
         </div>
       )}

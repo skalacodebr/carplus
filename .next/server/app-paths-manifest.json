@@ -1,8 +1,9 @@
 {
-  "/api/webhook/asaas/route": "app/api/webhook/asaas/route.js",
-  "/historico/page": "app/historico/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/pedidos/page": "app/pedidos/page.js",
+  "/api/asaas/proxy/route": "app/api/asaas/proxy/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
   "/pedidos/[id]/page": "app/pedidos/[id]/page.js",
-  "/carrinho/page": "app/carrinho/page.js"
+  "/pedidos/page": "app/pedidos/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/carrinho/page": "app/carrinho/page.js",
+  "/login/page": "app/login/page.js"
 }

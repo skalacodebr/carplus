@@ -1,5 +1,11 @@
 import { supabase } from "./supabase";
-import { createPayment, createOrUpdateCustomer, getPixQrCode, checkPaymentStatus, cancelPayment } from "@/lib/asaas";
+import {
+  createPayment,
+  createOrUpdateCustomer,
+  getPixQrCode,
+  checkPaymentStatus,
+  cancelPayment,
+} from "@/lib/asaas";
 
 // Funções para produtos
 export async function getProdutos() {
@@ -300,7 +306,7 @@ export async function criarPedidoNovo(
   valorTotal: number,
   frete: number,
   tipoEntrega: string,
-  metodoPagamento: string,
+  metodoPagamento: string
 ) {
   try {
     console.log("Iniciando criação do pedido para usuário:", userId);
@@ -385,7 +391,9 @@ export async function criarPedidoNovo(
         | "UNDEFINED",
       customer: cliente.id,
       value: Number(valorTotal) + Number(frete),
-      dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0],
       description: `#${numeroPedido}`,
     };
 
@@ -433,16 +441,15 @@ export async function criarPedidoNovo(
     }
 
     let dadosPagamento = null;
-    if(metodoPagamento === "PIX" || metodoPagamento === "BOLETO") {
+    if (metodoPagamento === "PIX" || metodoPagamento === "BOLETO") {
       dadosPagamento = await getPixQrCode(pagamento.id);
       console.log("QR Code PIX:", dadosPagamento);
-      
     }
 
     let pix = null;
     let boleto = null;
 
-    if(dadosPagamento) {
+    if (dadosPagamento) {
       pix = dadosPagamento.pix;
       boleto = dadosPagamento.bankSlip;
     }
@@ -520,7 +527,13 @@ export async function criarPedidoNovo(
     console.log("Pagamento criado com sucesso:", boleto);
     console.log("Pagamento criado com sucesso:", pagamento.id);
 
-    return { data: pedido, pix, boleto, pagamentoId: pagamento.id, error: null };
+    return {
+      data: pedido,
+      pix,
+      boleto,
+      pagamentoId: pagamento.id,
+      error: null,
+    };
   } catch (error) {
     console.error("Erro ao criar pedido:", error);
     return { data: null, error };
@@ -1098,11 +1111,9 @@ export async function getUsuarioIdRevendedor(revendedorId: number) {
   }
 }
 
-export async function checkStatusPedido(
-  id: string
-) {
+export async function checkStatusPedido(id: string) {
   try {
-    console.log("Iniciando criação do pedido para usuário:", id);    
+    console.log("Iniciando criação do pedido para usuário:", id);
 
     if (!id) {
       throw new Error("ID do pagamento não encontrado");
@@ -1119,11 +1130,9 @@ export async function checkStatusPedido(
   }
 }
 
-export async function cancelarPedido(
-  id: string
-) {
+export async function cancelarPedido(id: string) {
   try {
-    console.log("Iniciando criação do pedido para usuário:", id);    
+    console.log("Iniciando criação do pedido para usuário:", id);
 
     if (!id) {
       throw new Error("ID do pagamento não encontrado");

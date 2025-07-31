@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createOrUpdateCustomer, createPayment, getPixQrCode, formatCpfCnpj, formatPhone, formatCep } from "@/lib/asaas"
-import { supabase } from "@/lib/supabase"
+import { supabaseAdmin } from "@/lib/supabase-admin" // novo client com service role
 
 export async function POST(request: NextRequest) {
   try {
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Atualizar pedido no banco de dados com informações de pagamento
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from("pedidos")
       .update({
         pagamento_id: payment.id,

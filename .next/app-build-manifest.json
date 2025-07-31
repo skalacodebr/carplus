@@ -46,10 +46,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/asaas/proxy/route.js"
     ],
-    "/_not-found/page": [
+    "/api/teste/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
+      "static/chunks/app/api/teste/route.js"
     ]
   }
 }

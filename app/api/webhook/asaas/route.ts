@@ -52,7 +52,7 @@ async function atualizarStatusPedido(
         pedido_id: pedido.id,
         status_novo: novoStatus,
         status_anterior: pedido.status,
-        descricao: `Status do pagamento atualizado para ${novoStatus}`,
+        observacao: `Status do pagamento atualizado para ${novoStatus}`,
         pagamento_id: pagamentoId,
         created_at: new Date().toISOString(),
       });

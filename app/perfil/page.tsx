@@ -466,6 +466,12 @@ export default function Perfil() {
 
         {activeTab === "address" && (
           <div className="space-y-4">
+            {/* Explicação sobre CEP */}
+            <div className="bg-blue-500 bg-opacity-20 border border-blue-500 rounded-lg p-3 mb-4">
+              <p className="text-blue-300 text-sm">
+                ℹ️ Digite seu CEP e os campos de endereço serão preenchidos automaticamente
+              </p>
+            </div>
             <div className="relative">
               <label htmlFor="cep" className="block text-sm text-gray-400 mb-1">
                 CEP
@@ -496,8 +502,10 @@ export default function Perfil() {
                 name="rua"
                 value={formData.rua}
                 onChange={handleChange}
-                disabled={!isEditing}
+                disabled={!isEditing || !!formData.rua}
+                readOnly={!!formData.rua}
                 className="w-full bg-[#3A3942] text-white py-3 px-4 rounded-[16px] focus:outline-none disabled:opacity-70"
+                title={formData.rua ? "Rua é preenchida automaticamente pelo CEP" : ""}
               />
             </div>
 
@@ -542,8 +550,10 @@ export default function Perfil() {
                 name="bairro"
                 value={formData.bairro}
                 onChange={handleChange}
-                disabled={!isEditing}
+                disabled={!isEditing || !!formData.bairro}
+                readOnly={!!formData.bairro}
                 className="w-full bg-[#3A3942] text-white py-3 px-4 rounded-[16px] focus:outline-none disabled:opacity-70"
+                title={formData.bairro ? "Bairro é preenchido automaticamente pelo CEP" : ""}
               />
             </div>
 
@@ -558,8 +568,10 @@ export default function Perfil() {
                   name="cidade"
                   value={formData.cidade}
                   onChange={handleChange}
-                  disabled={!isEditing || (formData.cidade && formData.cidade.trim() !== "")}
-                  className="w-full bg-[#3A3942] text-white py-3 px-4 rounded-[16px] focus:outline-none disabled:opacity-70"
+                  disabled={true}
+                  readOnly={true}
+                  className="w-full bg-[#3A3942] text-white py-3 px-4 rounded-[16px] focus:outline-none opacity-70"
+                  title="Cidade é preenchida automaticamente pelo CEP"
                 />
               </div>
               <div className="w-1/3">
@@ -572,9 +584,11 @@ export default function Perfil() {
                   name="uf"
                   value={formData.uf}
                   onChange={handleChange}
-                  disabled={!isEditing || (formData.uf && formData.uf.trim() !== "")}
-                  className="w-full bg-[#3A3942] text-white py-3 px-4 rounded-[16px] focus:outline-none disabled:opacity-70"
+                  disabled={true}
+                  readOnly={true}
+                  className="w-full bg-[#3A3942] text-white py-3 px-4 rounded-[16px] focus:outline-none opacity-70"
                   maxLength={2}
+                  title="UF é preenchida automaticamente pelo CEP"
                 />
               </div>
             </div>

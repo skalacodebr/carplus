@@ -6,11 +6,15 @@ export async function POST(req: NextRequest) {
   try {
     const { endpoint, method, data } = await req.json();
 
+    console.log("=== ASAAS PROXY ===");
     console.log("Endpoint:", endpoint);
     console.log("Method:", method);
-    console.log("Payload:", data);
+    console.log("Payload:", JSON.stringify(data, null, 2));
 
-    const response = await fetch(`https://sandbox.asaas.com/api/v3/${endpoint}`, {
+    const url = `https://sandbox.asaas.com/api/v3/${endpoint}`;
+    console.log("URL completa:", url);
+
+    const response = await fetch(url, {
       method,
       headers: {
         "Content-Type": "application/json",
@@ -20,12 +24,35 @@ export async function POST(req: NextRequest) {
       body: method === "GET" ? undefined : JSON.stringify(data),
     });
 
-    const responseData = await response.json();
+    console.log("Status da resposta:", response.status);
+    console.log("Headers da resposta:", Object.fromEntries(response.headers.entries()));
+
+    let responseData;
+    try {
+      responseData = await response.json();
+    } catch (jsonError) {
+      console.error("Erro ao fazer parse do JSON da resposta:", jsonError);
+      const responseText = await response.text();
+      console.error("Resposta como texto:", responseText);
+      return NextResponse.json({ 
+        error: true, 
+        message: "Resposta inválida do Asaas",
+        details: { responseText, status: response.status }
+      }, { status: 500 });
+    }
+
+    console.log("Resposta do Asaas:", JSON.stringify(responseData, null, 2));
+    
     return NextResponse.json(responseData, { status: response.status });
 
   } catch (error) {
     console.error("Erro na API do proxy Asaas:", error);
-    return NextResponse.json({ error: true, message: error.message }, { status: 500 });
+    console.error("Stack trace:", error.stack);
+    return NextResponse.json({ 
+      error: true, 
+      message: error.message,
+      stack: error.stack 
+    }, { status: 500 });
   }
 }
 

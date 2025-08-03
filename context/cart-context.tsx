@@ -10,11 +10,15 @@ interface CartItem {
   quantidade: number
   preco: number
   imagem?: string
+  revendedorId?: number
+  revendedorNome?: string
 }
 
 interface CartContextType {
   items: CartItem[]
-  addItem: (item: CartItem) => void
+  currentRevendedorId: number | null
+  currentRevendedorNome: string | null
+  addItem: (item: CartItem) => Promise<void>
   removeItem: (id: string) => void
   updateQuantity: (id: string, quantidade: number) => void
   clearCart: () => void
@@ -27,6 +31,8 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
+  const [currentRevendedorId, setCurrentRevendedorId] = useState<number | null>(null)
+  const [currentRevendedorNome, setCurrentRevendedorNome] = useState<string | null>(null)
   const { user } = useAuth()
 
   // Carregar itens do carrinho do localStorage ou do banco de dados
@@ -49,8 +55,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               quantidade: item.quantidade,
               preco: item.preco,
               imagem: item.imagem,
+              revendedorId: item.revendedor_id,
+              revendedorNome: item.revendedor_nome,
             }))
             setItems(cartItems)
+            
+            // Definir o revendedor atual baseado no primeiro item do carrinho
+            if (cartItems.length > 0 && cartItems[0].revendedorId) {
+              setCurrentRevendedorId(cartItems[0].revendedorId)
+              setCurrentRevendedorNome(cartItems[0].revendedorNome || null)
+            }
           }
         } catch (error) {
           console.error("Erro ao carregar carrinho:", error)
@@ -88,7 +102,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [items, user])
 
-  const addItem = (item: CartItem) => {
+  const addItem = async (item: CartItem) => {
+    // Verificar se já existe um revendedor diferente no carrinho
+    if (currentRevendedorId && item.revendedorId && currentRevendedorId !== item.revendedorId) {
+      throw new Error(`Você já possui produtos de outro revendedor no carrinho. Finalize o pedido atual ou limpe o carrinho para adicionar produtos de "${item.revendedorNome}".`)
+    }
+
+    // Se é o primeiro item ou item do mesmo revendedor
+    if (!currentRevendedorId && item.revendedorId) {
+      setCurrentRevendedorId(item.revendedorId)
+      setCurrentRevendedorNome(item.revendedorNome || null)
+    }
+
     setItems((prevItems) => {
       const existingItem = prevItems.find((i) => i.id === item.id)
       if (existingItem) {
@@ -100,15 +125,29 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }
 
   const removeItem = (id: string) => {
-    setItems((prevItems) => prevItems.filter((item) => item.id !== id))
+    setItems((prevItems) => {
+      const newItems = prevItems.filter((item) => item.id !== id)
+      // Se o carrinho ficar vazio, limpar informações do revendedor
+      if (newItems.length === 0) {
+        setCurrentRevendedorId(null)
+        setCurrentRevendedorNome(null)
+      }
+      return newItems
+    })
   }
 
   const updateQuantity = (id: string, quantidade: number) => {
+    if (quantidade <= 0) {
+      removeItem(id)
+      return
+    }
     setItems((prevItems) => prevItems.map((item) => (item.id === id ? { ...item, quantidade } : item)))
   }
 
   const clearCart = () => {
     setItems([])
+    setCurrentRevendedorId(null)
+    setCurrentRevendedorNome(null)
   }
 
   const getSubtotal = () => {
@@ -129,6 +168,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     <CartContext.Provider
       value={{
         items,
+        currentRevendedorId,
+        currentRevendedorNome,
         addItem,
         removeItem,
         updateQuantity,

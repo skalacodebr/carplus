@@ -78,6 +78,27 @@ async function asaasRequest(endpoint: string, method = "POST", data?: any) {
     });
 
     const responseData = await response.json();
+    
+    // Verificar se a resposta HTTP foi bem-sucedida
+    if (!response.ok) {
+      console.error("Erro HTTP do Asaas:", response.status, responseData);
+      return { 
+        error: true, 
+        message: responseData.message || `Erro HTTP ${response.status}`,
+        details: responseData
+      };
+    }
+    
+    // Verificar se a resposta contém erros específicos do Asaas
+    if (responseData.errors && responseData.errors.length > 0) {
+      console.error("Erros específicos do Asaas:", responseData.errors);
+      return { 
+        error: true, 
+        message: responseData.errors[0].description || "Erro na API do Asaas",
+        details: responseData.errors
+      };
+    }
+    
     return responseData;
   } catch (error) {
     console.error("Erro na requisição Asaas:", error);
@@ -91,17 +112,28 @@ async function asaasRequest(endpoint: string, method = "POST", data?: any) {
 export async function createOrUpdateCustomer(
   customerData: AsaasCustomer
 ): Promise<AsaasCustomer> {
-  // Verificar se o cliente já existe pelo CPF/CNPJ
   try {
-    console.log("Verificando cliente no Asaas:", customerData);
-    const searchResult = await asaasRequest(
-      `/customers?cpfCnpj=${customerData.cpfCnpj}`
-    );
+    console.log("Dados do cliente para Asaas:", JSON.stringify(customerData, null, 2));
+    
+    // Pular busca se CPF for o padrão (evitar erro 500)
+    if (customerData.cpfCnpj === "00000000000") {
+      console.log("Usando CPF padrão, criando cliente diretamente...");
+      return await asaasRequest("/customers", "POST", customerData);
+    }
+    
+    // Verificar se o cliente já existe pelo CPF/CNPJ
+    console.log("Verificando se cliente já existe...");
+    const searchEndpoint = `customers?cpfCnpj=${encodeURIComponent(customerData.cpfCnpj)}`;
+    console.log("Endpoint de busca:", searchEndpoint);
+    
+    const searchResult = await asaasRequest(searchEndpoint, "GET");
+    
+    console.log("Resultado da busca:", searchResult);
 
-    if (searchResult.data && searchResult.data.length > 0) {
+    if (searchResult && !searchResult.error && searchResult.data && searchResult.data.length > 0) {
       // Cliente já existe, atualizar
       const existingCustomer = searchResult.data[0];
-      console.log("Cliente encontrado:", existingCustomer);
+      console.log("Cliente encontrado, atualizando:", existingCustomer.id);
       return await asaasRequest(
         `/customers/${existingCustomer.id}`,
         "PUT",
@@ -109,12 +141,14 @@ export async function createOrUpdateCustomer(
       );
     } else {
       // Cliente não existe, criar
-      console.log("Cliente não encontrado, criando...");
+      console.log("Cliente não encontrado, criando novo...");
       return await asaasRequest("/customers", "POST", customerData);
     }
   } catch (error) {
     console.error("Erro ao criar/atualizar cliente no Asaas:", error);
-    throw error;
+    // Em caso de erro na busca, tentar criar diretamente
+    console.log("Tentando criar cliente diretamente após erro na busca...");
+    return await asaasRequest("/customers", "POST", customerData);
   }
 }
 

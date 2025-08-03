@@ -189,56 +189,90 @@ export async function criarPedido(
 // Função para buscar pacote baseado no nome do produto
 export async function getPacoteByProdutoNome(produtoNome: string) {
   try {
-    // Mapear nomes de produtos para pacotes
-    // Você pode ajustar essa lógica conforme sua regra de negócio
-    const mapeamentoProdutos: Record<string, number> = {
-      "Microesferas Azul": 1,
-      "Microesferas Vermelha": 2,
-      "Microesferas Verde": 3,
-      "Microesferas Amarela": 4,
-      "Microesferas Preta": 5,
-      "Microesferas Branca": 6,
-    };
+    console.log("Buscando pacote para produto:", produtoNome);
 
-    // Se existe um mapeamento direto, usar ele
-    if (mapeamentoProdutos[produtoNome]) {
-      return { data: mapeamentoProdutos[produtoNome], error: null };
-    }
-
-    // Caso contrário, tentar buscar por nome similar
-    const { data: pacotes, error } = await supabase
+    // Estratégia 1: Buscar por descrição exata
+    const { data: pacoteExato, error: errorExato } = await supabase
       .from("pacotes")
-      .select("id, nome, cor")
-      .ilike("nome", `%${produtoNome}%`)
+      .select("id, descricao, cor")
+      .eq("descricao", produtoNome)
       .limit(1);
 
-    if (error) {
-      console.error("Erro ao buscar pacote por nome:", error);
-      return { data: 1, error: null }; // Fallback para ID 1
+    if (!errorExato && pacoteExato && pacoteExato.length > 0) {
+      console.log("Pacote encontrado por descrição exata:", pacoteExato[0]);
+      return { data: pacoteExato[0].id, error: null };
     }
 
-    if (pacotes && pacotes.length > 0) {
-      return { data: pacotes[0].id, error: null };
+    // Estratégia 2: Buscar por descrição similar (usando ilike)
+    const { data: pacoteSimilar, error: errorSimilar } = await supabase
+      .from("pacotes")
+      .select("id, descricao, cor")
+      .ilike("descricao", `%${produtoNome}%`)
+      .limit(1);
+
+    if (!errorSimilar && pacoteSimilar && pacoteSimilar.length > 0) {
+      console.log("Pacote encontrado por descrição similar:", pacoteSimilar[0]);
+      return { data: pacoteSimilar[0].id, error: null };
     }
 
-    // Se não encontrou nada, tentar buscar por cor
-    const cores = ["azul", "vermelha", "verde", "amarela", "preta", "branca"];
-    for (const cor of cores) {
-      if (produtoNome.toLowerCase().includes(cor)) {
-        const { data: pacotePorCor, error: errorCor } = await supabase
-          .from("pacotes")
-          .select("id")
-          .ilike("cor", `%${cor}%`)
-          .limit(1);
+    // Estratégia 3: Buscar todos os pacotes e fazer busca local
+    const { data: todosPacotes, error: errorTodos } = await supabase
+      .from("pacotes")
+      .select("id, descricao, cor")
+      .limit(50);
 
-        if (!errorCor && pacotePorCor && pacotePorCor.length > 0) {
-          return { data: pacotePorCor[0].id, error: null };
-        }
+    if (errorTodos) {
+      console.error("Erro ao buscar todos os pacotes:", errorTodos);
+      return { data: 1, error: null };
+    }
+
+    if (!todosPacotes || todosPacotes.length === 0) {
+      console.log("Nenhum pacote encontrado na tabela");
+      return { data: 1, error: null };
+    }
+
+    console.log("Total de pacotes no banco:", todosPacotes.length);
+    console.log("Primeiros 3 pacotes:", todosPacotes.slice(0, 3));
+
+    // Busca local por correspondência parcial na descrição
+    const produtoLower = produtoNome.toLowerCase();
+    for (const pacote of todosPacotes) {
+      if (pacote.descricao && pacote.descricao.toLowerCase().includes(produtoLower)) {
+        console.log("Pacote encontrado por busca local:", pacote);
+        return { data: pacote.id, error: null };
       }
     }
 
-    // Fallback final
-    return { data: 1, error: null };
+    // Estratégia 4: Buscar por cor se o produto contém alguma cor
+    const coresMapping = {
+      "azul": ["azul", "blue"],
+      "vermelh": ["vermelha", "vermelh", "red"], 
+      "verde": ["verde", "green"],
+      "amarelo": ["amarela", "amarelo", "yellow"],
+      "preto": ["preta", "preto", "black"], 
+      "branco": ["branca", "branco", "white"]
+    };
+    
+    for (const [termo, variantes] of Object.entries(coresMapping)) {
+      if (produtoLower.includes(termo)) {
+        for (const pacote of todosPacotes) {
+          if (pacote.cor) {
+            const corLower = pacote.cor.toLowerCase();
+            for (const variante of variantes) {
+              if (corLower.includes(variante)) {
+                console.log(`Pacote encontrado por cor '${termo}':`, pacote);
+                return { data: pacote.id, error: null };
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // Fallback: retornar o primeiro pacote disponível
+    console.log("Nenhuma correspondência encontrada. Usando fallback para o primeiro pacote:", todosPacotes[0]);
+    return { data: todosPacotes[0].id, error: null };
+    
   } catch (error) {
     console.error("Erro ao buscar pacote:", error);
     return { data: 1, error: null };
@@ -350,38 +384,74 @@ export async function criarPedidoNovo(
     // Criar o pedido usando o schema correto
 
     const user = await getUserInfo(clienteId.toString());
-    console.log("User:", user);
+    console.log("User completo:", JSON.stringify(user, null, 2));
 
     if (!user.data) {
       throw new Error("Usuário não encontrado");
     }
 
-    if (
-      !user.data?.nome ||
-      !user.data?.email ||
-      !user.data?.telefone ||
-      !user.data?.cpf
-    ) {
-      throw new Error("Dados do usuário incompletos");
+    // Debug dos campos obrigatórios
+    console.log("Validação dos campos obrigatórios:");
+    console.log("- nome:", user.data?.nome);
+    console.log("- email:", user.data?.email);
+    console.log("- telefone:", user.data?.telefone);
+    console.log("- cpf:", user.data?.cpf);
+
+    const camposObrigatorios = {
+      nome: user.data?.nome,
+      email: user.data?.email,
+      telefone: user.data?.telefone
+    };
+
+    const camposFaltando = Object.entries(camposObrigatorios)
+      .filter(([campo, valor]) => !valor)
+      .map(([campo]) => campo);
+
+    if (camposFaltando.length > 0) {
+      console.error("Campos obrigatórios faltando:", camposFaltando);
+      throw new Error(`Dados do usuário incompletos. Campos faltando: ${camposFaltando.join(", ")}`);
     }
 
-    const cliente = await createOrUpdateCustomer({
-      name: user.data?.nome + " " + user.data?.sobrenome,
+    // CPF é opcional - se não existir, usar um valor padrão
+    const cpfParaUsar = user.data?.cpf || "00000000000"; // CPF padrão para casos sem CPF
+
+    // Validar dados obrigatórios para criação do cliente no Asaas
+    const dadosCliente = {
+      name: user.data?.nome + " " + (user.data?.sobrenome || ""),
       email: user.data?.email,
-      phone: user.data?.telefone,
-      mobilePhone: user.data?.telefone,
-      cpfCnpj: user.data?.cpf,
-      postalCode: user.data?.cep,
-      address: user.data?.rua,
-      addressNumber: user.data?.numero,
-      complement: user.data?.complemento,
-      province: user.data?.bairro,
-      city: user.data?.cidade,
-      state: user.data?.uf,
+      phone: user.data?.telefone || "11999999999",
+      mobilePhone: user.data?.telefone || "11999999999",
+      cpfCnpj: cpfParaUsar,
+      postalCode: user.data?.cep || "01000-000",
+      address: user.data?.rua || "Rua não informada",
+      addressNumber: user.data?.numero || "S/N",
+      complement: user.data?.complemento || "",
+      province: user.data?.bairro || "Centro",
+      city: user.data?.cidade || "São Paulo",
+      state: user.data?.uf || "SP",
       externalReference: user.data?.id.toString(),
-    });
+    };
+
+    console.log("Dados do cliente para Asaas:", JSON.stringify(dadosCliente, null, 2));
+
+    const cliente = await createOrUpdateCustomer(dadosCliente);
 
     console.log("Cliente criado:", cliente);
+
+    // Validar se o cliente foi criado corretamente
+    if (!cliente || !cliente.id) {
+      console.error("Cliente não foi criado corretamente:", cliente);
+      
+      // Se há detalhes específicos do erro, mostrar para o usuário
+      if (cliente && cliente.error && cliente.details) {
+        const errorMessage = cliente.message || "Erro desconhecido do Asaas";
+        const errorDetails = JSON.stringify(cliente.details, null, 2);
+        console.error("Detalhes do erro do Asaas:", errorDetails);
+        throw new Error(`Erro ao criar cliente no Asaas: ${errorMessage}. Detalhes: ${errorDetails}`);
+      }
+      
+      throw new Error("Erro ao criar cliente no Asaas");
+    }
 
     const pagamentoData: AsaasPayment = {
       billingType: metodoPagamento as
@@ -390,11 +460,11 @@ export async function criarPedidoNovo(
         | "PIX"
         | "UNDEFINED",
       customer: cliente.id,
-      value: Number(valorTotal) + Number(frete),
+      value: Math.round((Number(valorTotal) + Number(frete)) * 100) / 100, // Arredondar para 2 casas decimais
       dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000)
         .toISOString()
         .split("T")[0],
-      description: `#${numeroPedido}`,
+      description: `Pedido #${numeroPedido}`,
     };
 
     if (metodoPagamento === "CREDIT_CARD") {
@@ -422,7 +492,7 @@ export async function criarPedidoNovo(
       pagamentoData.creditCardHolderInfo = {
         name: user.data.nome + " " + user.data.sobrenome,
         email: user.data.email,
-        cpfCnpj: user.data.cpf,
+        cpfCnpj: cpfParaUsar,
         postalCode: user.data.cep,
         addressNumber: user.data.numero,
         addressComplement: user.data.complemento || "",
@@ -432,12 +502,24 @@ export async function criarPedidoNovo(
       pagamentoData.remoteIp = "127.0.0.1";
     }
 
+    console.log("Dados do pagamento que serão enviados:", JSON.stringify(pagamentoData, null, 2));
+    
     const pagamento = await createPayment(pagamentoData);
 
-    console.log("Pagamento criado:", pagamento);
+    console.log("Resposta completa do pagamento:", JSON.stringify(pagamento, null, 2));
+
+    if (!pagamento) {
+      throw new Error("Resposta vazia do Asaas - pagamento não foi criado");
+    }
+
+    if (pagamento.error) {
+      console.error("Erro específico do Asaas:", pagamento.error);
+      throw new Error(`Erro do Asaas: ${pagamento.error}`);
+    }
 
     if (!pagamento.id) {
-      throw new Error("Erro ao criar pagamento no Asaas");
+      console.error("Pagamento retornado sem ID:", pagamento);
+      throw new Error("Erro ao criar pagamento no Asaas - ID não retornado");
     }
 
     let dadosPagamento = null;
@@ -1145,6 +1227,153 @@ export async function cancelarPedido(id: string) {
     return { data: response, error: null };
   } catch (error) {
     console.error("Erro ao verificar status do pagamento:", error);
+    return { data: null, error };
+  }
+}
+
+// ==================== FUNÇÕES DE NOTIFICAÇÕES ====================
+
+// Interface para notificações
+export interface Notificacao {
+  id: number;
+  usuario_id: number;
+  pedido_id?: number;
+  titulo: string;
+  mensagem: string;
+  tipo: "info" | "success" | "warning" | "error";
+  lida: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Buscar notificações do usuário
+export async function getNotificacoesUsuario(userId: string, apenasNaoLidas = false) {
+  try {
+    let query = supabase
+      .from("notificacoes")
+      .select("*")
+      .eq("usuario_id", parseInt(userId))
+      .order("created_at", { ascending: false });
+
+    if (apenasNaoLidas) {
+      query = query.eq("lida", false);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Erro ao buscar notificações:", error);
+      return { data: [], error };
+    }
+
+    return { data: data || [], error: null };
+  } catch (error) {
+    console.error("Erro ao buscar notificações do usuário:", error);
+    return { data: [], error };
+  }
+}
+
+// Contar notificações não lidas
+export async function contarNotificacoesNaoLidas(userId: string) {
+  try {
+    const { count, error } = await supabase
+      .from("notificacoes")
+      .select("*", { count: "exact", head: true })
+      .eq("usuario_id", parseInt(userId))
+      .eq("lida", false);
+
+    if (error) {
+      console.error("Erro ao contar notificações não lidas:", error);
+      return { data: 0, error };
+    }
+
+    return { data: count || 0, error: null };
+  } catch (error) {
+    console.error("Erro ao contar notificações não lidas:", error);
+    return { data: 0, error };
+  }
+}
+
+// Marcar notificação como lida
+export async function marcarNotificacaoComoLida(notificacaoId: number) {
+  try {
+    const { data, error } = await supabase
+      .from("notificacoes")
+      .update({ 
+        lida: true, 
+        updated_at: new Date().toISOString() 
+      })
+      .eq("id", notificacaoId)
+      .select();
+
+    if (error) {
+      console.error("Erro ao marcar notificação como lida:", error);
+      return { data: null, error };
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    console.error("Erro ao marcar notificação como lida:", error);
+    return { data: null, error };
+  }
+}
+
+// Marcar todas as notificações como lidas
+export async function marcarTodasNotificacoesComoLidas(userId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("notificacoes")
+      .update({ 
+        lida: true, 
+        updated_at: new Date().toISOString() 
+      })
+      .eq("usuario_id", parseInt(userId))
+      .eq("lida", false)
+      .select();
+
+    if (error) {
+      console.error("Erro ao marcar todas as notificações como lidas:", error);
+      return { data: null, error };
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    console.error("Erro ao marcar todas as notificações como lidas:", error);
+    return { data: null, error };
+  }
+}
+
+// Criar nova notificação
+export async function criarNotificacao(
+  usuarioId: number,
+  titulo: string,
+  mensagem: string,
+  tipo: "info" | "success" | "warning" | "error" = "info",
+  pedidoId?: number
+) {
+  try {
+    const { data, error } = await supabase
+      .from("notificacoes")
+      .insert([{
+        usuario_id: usuarioId,
+        pedido_id: pedidoId,
+        titulo,
+        mensagem,
+        tipo,
+        lida: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }])
+      .select();
+
+    if (error) {
+      console.error("Erro ao criar notificação:", error);
+      return { data: null, error };
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    console.error("Erro ao criar notificação:", error);
     return { data: null, error };
   }
 }

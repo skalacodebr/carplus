@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
 import { useCart } from "@/context/cart-context"
 import SpinningWheel from "@/components/spinning-wheel"
+import NotificationBell from "@/components/notification-bell"
 
 // Adicione este tipo
 type Tamanho = {
@@ -191,7 +192,14 @@ export default function Dashboard() {
       setLoadingRevendedores(true)
       const { supabase } = await import("@/lib/supabase")
 
-      // Buscar todos os revendedores ativos com foto da tabela usuarios
+      // Se o usuário não tem cidade cadastrada, não buscar revendedores
+      if (!user || !user.cidade) {
+        setRevendedores([])
+        setLoadingRevendedores(false)
+        return
+      }
+
+      // Buscar apenas revendedores da mesma cidade do usuário
       const { data: revendedoresData, error } = await supabase
         .from("revendedores")
         .select(`
@@ -200,24 +208,25 @@ export default function Dashboard() {
         `)
         .eq("status", true)
         .eq("usuarios.tipo", "revendedor")
-        .order("cidade", { ascending: true })
+        .ilike("cidade", user.cidade) // Busca case-insensitive
+        .order("loja", { ascending: true }) // Ordenar por nome da loja
 
       if (error) {
         console.error("Erro ao buscar revendedores:", error)
         return
       }
 
-      if (revendedoresData) {
+      if (revendedoresData && revendedoresData.length > 0) {
         setRevendedores(revendedoresData)
 
-        // Se o usuário tem cidade, tentar selecionar revendedor da mesma cidade
-        if (user && user.cidade) {
-          const revendedorLocal = revendedoresData.find((r) => r.cidade.toLowerCase() === user.cidade.toLowerCase())
-          if (revendedorLocal) {
-            setRevendedorSelecionado(revendedorLocal)
-            await fetchEstoqueRevendedor(revendedorLocal.id)
-          }
-        }
+        // Selecionar automaticamente o primeiro revendedor da cidade
+        const primeiroRevendedor = revendedoresData[0]
+        setRevendedorSelecionado(primeiroRevendedor)
+        await fetchEstoqueRevendedor(primeiroRevendedor.id)
+      } else {
+        // Nenhum revendedor encontrado na cidade
+        setRevendedores([])
+        setRevendedorSelecionado(null)
       }
     } catch (error) {
       console.error("Erro ao buscar revendedores:", error)
@@ -533,38 +542,45 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Logo e ícone de carrinho */}
+      {/* Logo, notificações e ícone de carrinho */}
       <div className="relative flex justify-center items-center py-4 px-4">
         <div className="mt-4">
           <Image src="/images/car-logo-complete.png" alt="CAR+ Logo" width={180} height={50} priority />
         </div>
-        <button
-          onClick={navigateToCart}
-          className="absolute right-4 top-1/2 transform -translate-y-1/2 p-2 rounded-full hover:bg-[#3A3942] transition-colors"
-          aria-label="Ver carrinho"
-        >
-          <div className="relative">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-            </svg>
-            {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-[#ED1C24] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {cartCount}
-              </span>
-            )}
-          </div>
-        </button>
+        
+        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+          {/* Sino de notificações */}
+          <NotificationBell />
+          
+          {/* Carrinho */}
+          <button
+            onClick={navigateToCart}
+            className="p-2 rounded-full hover:bg-[#3A3942] transition-colors"
+            aria-label="Ver carrinho"
+          >
+            <div className="relative">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-[#ED1C24] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </div>
+          </button>
+        </div>
       </div>
 
       {/* Barra de pesquisa */}
@@ -614,7 +630,18 @@ export default function Dashboard() {
 
       {/* Seletor de Revendedores */}
       <div className="px-4 py-2 mt-4">
-        <h3 className="text-lg font-bold mb-3">Selecione um Revendedor</h3>
+        <h3 className="text-lg font-bold mb-3">
+          Revendedores em {user?.cidade || "sua cidade"}
+        </h3>
+
+        {/* Alert se usuário não tem cidade cadastrada */}
+        {!user?.cidade && (
+          <div className="bg-yellow-500 bg-opacity-20 border border-yellow-500 rounded-lg p-3 mb-4">
+            <p className="text-yellow-300 text-sm">
+              ⚠️ Você precisa cadastrar sua cidade no perfil para ver revendedores disponíveis.
+            </p>
+          </div>
+        )}
 
         {/* Alert se já há produtos de outro revendedor no carrinho */}
         {currentRevendedorId && revendedorSelecionado && currentRevendedorId !== revendedorSelecionado.id && (
@@ -633,8 +660,24 @@ export default function Dashboard() {
           </div>
         ) : revendedores.length === 0 ? (
           <div className="bg-[#3A3942] rounded-lg p-4 text-center">
-            <p className="text-gray-300">Nenhum revendedor disponível</p>
-            <p className="text-sm text-gray-400 mt-1">Não será possível adicionar produtos ao carrinho</p>
+            {user?.cidade ? (
+              <>
+                <p className="text-gray-300">Nenhum revendedor disponível em {user.cidade}</p>
+                <p className="text-sm text-gray-400 mt-1">
+                  Não há revendedores cadastrados na sua cidade ainda.
+                </p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Entre em contato conosco para indicar um revendedor local.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-gray-300">Cadastre sua cidade no perfil</p>
+                <p className="text-sm text-gray-400 mt-1">
+                  Para ver revendedores disponíveis na sua região.
+                </p>
+              </>
+            )}
           </div>
         ) : (
           <div className={`space-y-2 ${revendedores.length > 2 ? "max-h-64 overflow-y-auto" : ""}`}>
@@ -733,7 +776,26 @@ export default function Dashboard() {
       {/* Conteúdo da aba "Comprar" */}
       {activeTab === "comprar" && (
         <div className="space-y-4">
-          {!revendedorSelecionado && (
+          {!revendedorSelecionado && revendedores.length === 0 && user?.cidade && (
+            <div className="bg-red-500 bg-opacity-20 border border-red-500 rounded-lg p-3 mb-4">
+              <p className="text-red-300 text-sm">
+                ❌ Nenhum revendedor disponível em {user.cidade}
+              </p>
+              <p className="text-red-200 text-xs mt-1">
+                Não é possível comprar produtos no momento.
+              </p>
+            </div>
+          )}
+          
+          {!revendedorSelecionado && !user?.cidade && (
+            <div className="bg-yellow-500 bg-opacity-20 border border-yellow-500 rounded-lg p-3 mb-4">
+              <p className="text-yellow-300 text-sm">
+                ⚠️ Cadastre sua cidade no perfil para ver produtos disponíveis
+              </p>
+            </div>
+          )}
+
+          {!revendedorSelecionado && revendedores.length > 0 && (
             <div className="bg-yellow-500 bg-opacity-20 border border-yellow-500 rounded-lg p-3 mb-4">
               <p className="text-yellow-300 text-sm">
                 ⚠️ Selecione um revendedor para ver a disponibilidade dos produtos

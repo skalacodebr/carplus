@@ -3,6 +3,7 @@ import "./globals.css"
 import type { Metadata } from "next"
 import { AuthProvider } from "@/context/auth-context"
 import { CartProvider } from "@/context/cart-context"
+import { NotificationsProvider } from "@/context/notifications-context"
 
 export const metadata: Metadata = {
   title: "Car+ Microesferas Premium",
@@ -19,7 +20,9 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body>
         <AuthProvider>
-          <CartProvider>{children}</CartProvider>
+          <NotificationsProvider>
+            <CartProvider>{children}</CartProvider>
+          </NotificationsProvider>
         </AuthProvider>
       </body>
     </html>

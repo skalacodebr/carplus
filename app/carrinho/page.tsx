@@ -412,7 +412,7 @@ export default function Carrinho() {
       const itensComRevendedor = produtos.map((produto) => ({
         ...produto,
         preco: revendedorSelecionado[produto.nome].preco,
-        pacote_id: 1, // Por enquanto usando ID fixo, depois você pode mapear corretamente
+        // Remover pacote_id fixo - será buscado dinamicamente na função criarPedidoNovo
       }));
 
       // Criar pedido no banco de dados usando o novo schema
@@ -515,7 +515,7 @@ export default function Carrinho() {
       const itensComRevendedor = produtos.map((produto) => ({
         ...produto,
         preco: revendedorSelecionado[produto.nome].preco,
-        pacote_id: 1,
+        // Remover pacote_id fixo - será buscado dinamicamente na função criarPedidoNovo
       }));
 
       // Criar pedido no banco de dados

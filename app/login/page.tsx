@@ -26,11 +26,11 @@ export default function Login() {
 
   // Check if user is already authenticated
   useEffect(() => {
-    // Comentado para evitar loop infinito
-    // if (isAuthenticated()) {
-    //   console.log("User is already authenticated, redirecting to dashboard")
-    //   router.push("/dashboard")
-    // }
+    // Only check authentication on client side
+    if (typeof window !== 'undefined' && isAuthenticated()) {
+      console.log("User is already authenticated, redirecting to dashboard")
+      router.push("/dashboard")
+    }
   }, [router])
 
   // Função para formatar telefone: (XX) XXXXX-XXXX

@@ -38,6 +38,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Carregar itens do carrinho do localStorage ou do banco de dados
   useEffect(() => {
     const loadCartItems = async () => {
+      // Skip on server side to prevent SSR issues
+      if (typeof window === 'undefined') {
+        return
+      }
+
       if (user) {
         try {
           const { getCarrinhoUsuario } = await import("@/lib/database")
@@ -84,6 +89,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Salvar itens do carrinho no localStorage ou no banco de dados
   useEffect(() => {
     const saveCartItems = async () => {
+      // Skip on server side to prevent SSR issues
+      if (typeof window === 'undefined') {
+        return
+      }
+
       if (user) {
         try {
           const { atualizarCarrinhoUsuario } = await import("@/lib/database")
@@ -97,7 +107,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Só salva se houver itens ou se o carrinho foi esvaziado
-    if (items.length > 0 || (user && localStorage.getItem("cart"))) {
+    if (items.length > 0 || (user && typeof window !== 'undefined' && localStorage.getItem("cart"))) {
       saveCartItems()
     }
   }, [items, user])

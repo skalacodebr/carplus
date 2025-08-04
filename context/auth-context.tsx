@@ -34,6 +34,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function refreshUser() {
     try {
+      // Skip on server side to prevent SSR issues
+      if (typeof window === 'undefined') {
+        setLoading(false)
+        return
+      }
+
       setLoading(true)
       console.log("AuthContext: Refreshing user...")
       const { user, error } = await getCurrentUser()
@@ -66,7 +72,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    refreshUser()
+    // Only run on client side after mount
+    if (typeof window !== 'undefined') {
+      refreshUser()
+    }
   }, [])
 
   return <AuthContext.Provider value={{ user, loading, error, refreshUser, logout }}>{children}</AuthContext.Provider>

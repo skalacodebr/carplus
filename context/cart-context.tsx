@@ -53,7 +53,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             return
           }
 
-          if (data && data.length > 0) {
+          if (data && Array.isArray(data) && data.length > 0) {
             const cartItems = data.map((item: any) => ({
               id: item.id.toString(),
               nome: item.produto_nome,
@@ -70,15 +70,36 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               setCurrentRevendedorId(cartItems[0].revendedorId)
               setCurrentRevendedorNome(cartItems[0].revendedorNome || null)
             }
+          } else {
+            // Se não há dados ou dados não são array, inicializar com array vazio
+            setItems([])
+            setCurrentRevendedorId(null)
+            setCurrentRevendedorNome(null)
           }
         } catch (error) {
           console.error("Erro ao carregar carrinho:", error)
+          // Em caso de erro, garantir que temos um array vazio
+          setItems([])
+          setCurrentRevendedorId(null)
+          setCurrentRevendedorNome(null)
         }
       } else {
         // Se não estiver logado, carrega do localStorage
-        const savedCart = localStorage.getItem("cart")
-        if (savedCart) {
-          setItems(JSON.parse(savedCart))
+        try {
+          const savedCart = localStorage.getItem("cart")
+          if (savedCart) {
+            const parsedCart = JSON.parse(savedCart)
+            if (Array.isArray(parsedCart)) {
+              setItems(parsedCart)
+            } else {
+              setItems([])
+            }
+          } else {
+            setItems([])
+          }
+        } catch (error) {
+          console.error("Erro ao carregar carrinho do localStorage:", error)
+          setItems([])
         }
       }
     }
@@ -102,12 +123,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           console.error("Erro ao salvar carrinho:", error)
         }
       } else {
-        localStorage.setItem("cart", JSON.stringify(items))
+        try {
+          // Garantir que items é um array antes de salvar
+          const itemsToSave = Array.isArray(items) ? items : []
+          localStorage.setItem("cart", JSON.stringify(itemsToSave))
+        } catch (error) {
+          console.error("Erro ao salvar carrinho no localStorage:", error)
+        }
       }
     }
 
     // Só salva se houver itens ou se o carrinho foi esvaziado
-    if (items.length > 0 || (user && typeof window !== 'undefined' && localStorage.getItem("cart"))) {
+    if (Array.isArray(items) && (items.length > 0 || (user && typeof window !== 'undefined' && localStorage.getItem("cart")))) {
       saveCartItems()
     }
   }, [items, user])
@@ -125,6 +152,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
 
     setItems((prevItems) => {
+      // Garantir que prevItems é um array
+      if (!Array.isArray(prevItems)) {
+        return [item]
+      }
       const existingItem = prevItems.find((i) => i.id === item.id)
       if (existingItem) {
         return prevItems.map((i) => (i.id === item.id ? { ...i, quantidade: i.quantidade + item.quantidade } : i))
@@ -136,6 +167,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const removeItem = (id: string) => {
     setItems((prevItems) => {
+      // Garantir que prevItems é um array
+      if (!Array.isArray(prevItems)) {
+        return []
+      }
       const newItems = prevItems.filter((item) => item.id !== id)
       // Se o carrinho ficar vazio, limpar informações do revendedor
       if (newItems.length === 0) {
@@ -151,7 +186,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removeItem(id)
       return
     }
-    setItems((prevItems) => prevItems.map((item) => (item.id === id ? { ...item, quantidade } : item)))
+    setItems((prevItems) => {
+      // Garantir que prevItems é um array
+      if (!Array.isArray(prevItems)) {
+        return []
+      }
+      return prevItems.map((item) => (item.id === id ? { ...item, quantidade } : item))
+    })
   }
 
   const clearCart = () => {
@@ -161,6 +202,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }
 
   const getSubtotal = () => {
+    // Ensure items is always an array
+    if (!Array.isArray(items)) {
+      return 0
+    }
     return items.reduce((total, item) => total + item.preco * item.quantidade, 0)
   }
 
@@ -171,6 +216,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }
 
   const getItemCount = () => {
+    // Ensure items is always an array
+    if (!Array.isArray(items)) {
+      return 0
+    }
     return items.reduce((count, item) => count + item.quantidade, 0)
   }
 

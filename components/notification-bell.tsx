@@ -95,12 +95,14 @@ export default function NotificationBell() {
         >
           <Bell className="h-5 w-5" />
           {notificacoesNaoLidas > 0 && (
-            <Badge
-              variant="destructive"
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs animate-pulse"
-            >
-              {notificacoesNaoLidas > 99 ? "99+" : notificacoesNaoLidas}
-            </Badge>
+            <span className="absolute -top-2 -right-2 flex h-6 w-6">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-6 w-6 bg-red-500 items-center justify-center">
+                <span className="text-[10px] font-bold text-white">
+                  {notificacoesNaoLidas > 99 ? "99+" : notificacoesNaoLidas}
+                </span>
+              </span>
+            </span>
           )}
         </Button>
       </DropdownMenuTrigger>

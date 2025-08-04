@@ -64,6 +64,8 @@ export default function Carrinho() {
     getSubtotal,
     getTotal,
     clearCart,
+    currentRevendedorId,
+    currentRevendedorNome,
   } = useCart();
   const [produtos, setProdutos] = useState(items);
   const [tipoEntrega, setTipoEntrega] = useState("retirada");
@@ -404,15 +406,17 @@ export default function Carrinho() {
         "@/lib/database"
       );
 
-      // Pegar o primeiro revendedor (assumindo que todos os produtos são do mesmo revendedor por enquanto)
-      const primeiroRevendedor = Object.values(revendedorSelecionado)[0];
-      const revendedorId = primeiroRevendedor.revendedor.id;
+      // Usar o revendedor do contexto do carrinho (garantido ser único)
+      const revendedorId = currentRevendedorId;
+      
+      if (!revendedorId) {
+        throw new Error("Nenhum revendedor selecionado. Adicione produtos ao carrinho primeiro.");
+      }
 
-      // Preparar itens com informações do revendedor
+      // Preparar itens com informações do revendedor (já vem do contexto)
       const itensComRevendedor = produtos.map((produto) => ({
         ...produto,
-        preco: revendedorSelecionado[produto.nome].preco,
-        // Remover pacote_id fixo - será buscado dinamicamente na função criarPedidoNovo
+        // O preço já vem correto do contexto do carrinho
       }));
 
       // Criar pedido no banco de dados usando o novo schema
@@ -507,15 +511,17 @@ export default function Carrinho() {
         "@/lib/database"
       );
 
-      // Pegar o primeiro revendedor
-      const primeiroRevendedor = Object.values(revendedorSelecionado)[0];
-      const revendedorId = primeiroRevendedor.revendedor.id;
+      // Usar o revendedor do contexto do carrinho (garantido ser único)
+      const revendedorId = currentRevendedorId;
+      
+      if (!revendedorId) {
+        throw new Error("Nenhum revendedor selecionado. Adicione produtos ao carrinho primeiro.");
+      }
 
-      // Preparar itens com informações do revendedor
+      // Preparar itens com informações do revendedor (já vem do contexto)
       const itensComRevendedor = produtos.map((produto) => ({
         ...produto,
-        preco: revendedorSelecionado[produto.nome].preco,
-        // Remover pacote_id fixo - será buscado dinamicamente na função criarPedidoNovo
+        // O preço já vem correto do contexto do carrinho
       }));
 
       // Criar pedido no banco de dados
@@ -1288,58 +1294,20 @@ export default function Carrinho() {
           {/* Revendedor selecionado */}
           <div className="px-4 py-6">
             <h3 className="font-bold mb-4">Revendedor selecionado</h3>
-            {Object.keys(revendedorSelecionado).length === 0 ? (
+            {!currentRevendedorId ? (
               <p className="text-gray-400 text-sm">
                 Nenhum revendedor selecionado para os produtos.
               </p>
             ) : (
-              (() => {
-                // Get unique resellers
-                const revendedoresUnicos = Object.values(
-                  revendedorSelecionado
-                ).reduce((acc, item) => {
-                  const key = item.revendedor.id;
-                  if (!acc[key]) {
-                    acc[key] = item;
-                  }
-                  return acc;
-                }, {} as Record<number, RevendedorEstoque>);
-
-                return Object.values(revendedoresUnicos).map((revendedor) => (
-                  <div
-                    key={revendedor.revendedor.id}
-                    className="bg-[#3A3942] rounded-lg p-3 mb-3"
-                  >
-                    <div className="flex justify-between items-center p-2 bg-[#2C2B34] rounded">
-                      <div>
-                        <p className="font-medium text-sm">
-                          {revendedor.revendedor.loja}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {revendedor.revendedor.cidade}/
-                          {revendedor.revendedor.uf}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {revendedor.revendedor.vendas} vendas
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        {userInfo?.cidade &&
-                        revendedor.revendedor.cidade.toLowerCase() ===
-                          userInfo.cidade.toLowerCase() ? (
-                          <p className="text-xs text-green-400">
-                            Retirada grátis
-                          </p>
-                        ) : (
-                          <p className="text-xs text-gray-400">
-                            + R$ {revendedor.revendedor.frete} frete
-                          </p>
-                        )}
-                      </div>
-                    </div>
+              <div className="bg-[#3A3942] rounded-lg p-4">
+                <div className="flex items-center">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                  <div>
+                    <p className="font-medium">{currentRevendedorNome}</p>
+                    <p className="text-sm text-gray-400">ID: {currentRevendedorId}</p>
                   </div>
-                ));
-              })()
+                </div>
+              </div>
             )}
           </div>
 

@@ -1159,7 +1159,7 @@ export default function Carrinho() {
           <div className="flex flex-col items-center justify-center h-40 bg-[#3A3942] rounded-lg p-6">
             <p className="text-gray-400 mb-4">Seu carrinho está vazio</p>
             <button
-              onClick={() => router.push("/")}
+              onClick={() => router.push("/dashboard")}
               className="px-4 py-2 bg-[#fdc300] text-white rounded-md hover:bg-opacity-90"
             >
               Continuar comprando

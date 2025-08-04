@@ -3,7 +3,7 @@ import Link from "next/link"
 
 export default function Home() {
   return (
-    <main className="flex h-screen flex-col bg-black overflow-hidden">
+    <main data-page="home" className="flex h-screen flex-col bg-black">
       {/* Container superior - ajustado para caber na tela */}
       <div className="h-[55vh] relative">
         <div className="absolute inset-0">

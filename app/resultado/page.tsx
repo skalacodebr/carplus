@@ -30,6 +30,25 @@ export default function Resultado() {
 
   return (
     <main className="flex min-h-screen flex-col items-center bg-[#2C2B34] px-5 py-10">
+      {/* Back button */}
+      <div className="w-full max-w-md mb-4">
+        <Link
+          href="/calculadora"
+          className="flex items-center text-white hover:text-gray-300 transition-colors"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 mr-1"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Voltar
+        </Link>
+      </div>
+
       {/* Logo */}
       <div className="mb-1">
         <Image src="/images/car-logo-complete.png" alt="CAR+ Logo" width={280} height={100} priority />

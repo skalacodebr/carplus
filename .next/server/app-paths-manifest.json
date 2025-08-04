@@ -1,8 +1,10 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
-  "/carrinho/page": "app/carrinho/page.js",
   "/page": "app/page.js",
-  "/login/page": "app/login/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/perfil/page": "app/perfil/page.js"
+  "/calculadora/page": "app/calculadora/page.js",
+  "/resultado/page": "app/resultado/page.js",
+  "/login/page": "app/login/page.js",
+  "/pedidos/page": "app/pedidos/page.js",
+  "/cadastro/page": "app/cadastro/page.js"
 }

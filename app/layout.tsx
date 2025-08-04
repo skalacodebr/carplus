@@ -4,6 +4,8 @@ import type { Metadata } from "next"
 import { AuthProvider } from "@/context/auth-context"
 import { CartProvider } from "@/context/cart-context"
 import { NotificationsProvider } from "@/context/notifications-context"
+import BottomNavbar from "@/components/bottom-navbar"
+import MainContentWrapper from "@/components/main-content-wrapper"
 
 export const metadata: Metadata = {
   title: "Car+ Microesferas Premium",
@@ -19,11 +21,15 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body>
-        <AuthProvider>
-          <NotificationsProvider>
-            <CartProvider>{children}</CartProvider>
-          </NotificationsProvider>
-        </AuthProvider>
+        <div className="fixed-navbar"></div>
+        <MainContentWrapper>
+          <AuthProvider>
+            <NotificationsProvider>
+              <CartProvider>{children}</CartProvider>
+            </NotificationsProvider>
+          </AuthProvider>
+        </MainContentWrapper>
+        <BottomNavbar />
       </body>
     </html>
   )

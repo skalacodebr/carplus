@@ -23,10 +23,62 @@
   --background-rgb: 0, 0, 0;
 }
 
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
   font-family: "Barlow", sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Navbar fixa no topo - cinza por padrão */
+.fixed-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 25px;
+  background-color: #2c2b34;
+  z-index: 1000;
+}
+
+/* Navbar preta apenas na página inicial */
+body:has([data-page="home"]) .fixed-navbar {
+  background-color: #000000;
+}
+
+/* Container principal com scroll - com navbar inferior */
+.main-content {
+  margin-top: 25px;
+  height: calc(100vh - 25px - 80px); /* Subtraindo altura da navbar inferior */
+  overflow-y: auto;
+}
+
+/* Container principal com scroll - sem navbar inferior (páginas públicas) */
+.main-content-full {
+  margin-top: 25px;
+  height: calc(100vh - 25px); /* Apenas subtraindo a navbar superior */
+  overflow-y: auto;
+}
+
+/* Navbar inferior fixa */
+.fixed-bottom-navbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background-color: #2C2B34;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 16px 0;
 }
 
 /* Ocultar barras de rolagem para todos os navegadores */

@@ -56,6 +56,59 @@ function getNotificationColor(tipo: string): string {
   }
 }
 
+// Função para formatar status de forma amigável
+function formatStatus(status: string): string {
+  const statusMap: Record<string, string> = {
+    // Status de pedido
+    "aguardando_preparacao": "Aguardando Preparação",
+    "preparando_pedido": "Preparando Pedido",
+    "pronto_para_retirada": "Pronto para Retirada",
+    "retirado": "Retirado",
+    "aguardando_aceite": "Aguardando Aceite",
+    "aceito": "Aceito",
+    "cancelado": "Cancelado",
+    "a_caminho": "A Caminho",
+    "entregue": "Entregue",
+    
+    // Status de pagamento
+    "aguardando_pagamento": "Aguardando Pagamento",
+    "pago": "Pago",
+    "pendente": "Pendente",
+    
+    // Outros status comuns
+    "novo_pedido": "Novo Pedido",
+    "pedido_atualizado": "Pedido Atualizado",
+    "status_atualizado": "Status Atualizado",
+  }
+  
+  return statusMap[status] || status.split('_').map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1)
+  ).join(' ')
+}
+
+// Função para formatar mensagens de notificação
+function formatMessage(mensagem: string): string {
+  // Substituir underscores por espaços
+  let formatted = mensagem.replace(/_/g, ' ')
+  
+  // Capitalizar primeira letra de cada frase
+  formatted = formatted.replace(/(^|\. )(\w)/g, (match, p1, p2) => p1 + p2.toUpperCase())
+  
+  // Substituir termos técnicos por versões amigáveis
+  const replacements: Record<string, string> = {
+    "status detalhado": "status",
+    "pedido id": "pedido",
+    "cliente id": "cliente",
+    "revendedor id": "revendedor",
+  }
+  
+  Object.entries(replacements).forEach(([from, to]) => {
+    formatted = formatted.replace(new RegExp(from, 'gi'), to)
+  })
+  
+  return formatted
+}
+
 export default function NotificationBell() {
   const {
     notificacoes,
@@ -180,7 +233,7 @@ export default function NotificationBell() {
                           "text-sm font-medium truncate text-white",
                           !notificacao.lida && "font-semibold"
                         )}>
-                          {notificacao.titulo}
+                          {formatStatus(notificacao.titulo)}
                         </h4>
                         
                         <div className="flex items-center gap-1 ml-2 flex-shrink-0">
@@ -194,7 +247,7 @@ export default function NotificationBell() {
                       </div>
                       
                       <p className="text-xs text-gray-300 mt-1 line-clamp-2">
-                        {notificacao.mensagem}
+                        {formatMessage(notificacao.mensagem)}
                       </p>
                     </div>
                   </div>

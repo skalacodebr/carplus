@@ -162,7 +162,7 @@ export default function NotificationBell() {
       
       <DropdownMenuContent 
         align="end" 
-        className="w-80 max-h-96 overflow-y-auto bg-black/95 border-yellow-500/50 backdrop-blur-sm shadow-xl"
+        className="w-80 max-h-[32rem] overflow-y-auto overflow-x-hidden bg-black/95 border-yellow-500/50 backdrop-blur-sm shadow-xl"
         side="bottom"
         sideOffset={5}
       >
@@ -223,30 +223,32 @@ export default function NotificationBell() {
                 )}
                 onClick={() => handleNotificationClick(notificacao)}
               >
-                <div className="flex items-start justify-between w-full">
-                  <div className="flex items-start gap-2 flex-1">
-                    {getNotificationIcon(notificacao.tipo)}
+                <div className="flex items-start justify-between w-full overflow-hidden">
+                  <div className="flex items-start gap-2 flex-1 min-w-0">
+                    <div className="flex-shrink-0 mt-0.5">
+                      {getNotificationIcon(notificacao.tipo)}
+                    </div>
                     
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-start justify-between gap-2">
                         <h4 className={cn(
-                          "text-sm font-medium truncate text-white",
+                          "text-sm font-medium text-white break-words",
                           !notificacao.lida && "font-semibold"
                         )}>
                           {formatStatus(notificacao.titulo)}
                         </h4>
                         
-                        <div className="flex items-center gap-1 ml-2 flex-shrink-0">
-                          <span className="text-xs text-gray-400">
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <span className="text-xs text-gray-400 whitespace-nowrap">
                             {formatTimeAgo(notificacao.created_at)}
                           </span>
                           {!notificacao.lida && (
-                            <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+                            <div className="w-2 h-2 bg-yellow-500 rounded-full flex-shrink-0" />
                           )}
                         </div>
                       </div>
                       
-                      <p className="text-xs text-gray-300 mt-1 line-clamp-2">
+                      <p className="text-xs text-gray-300 mt-1 break-words">
                         {formatMessage(notificacao.mensagem)}
                       </p>
                     </div>

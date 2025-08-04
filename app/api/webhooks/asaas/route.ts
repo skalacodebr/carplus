@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { supabaseAdmin } from "@/lib/supabase-admin"
 
 // Webhook para receber notificações do Asaas
 export async function POST(request: NextRequest) {
@@ -11,17 +11,33 @@ export async function POST(request: NextRequest) {
     // }
 
     const payload = await request.json()
+    console.log("=== WEBHOOK ASAAS RECEBIDO ===")
+    console.log("Payload completo:", JSON.stringify(payload, null, 2))
 
     // Verificar se é uma notificação de pagamento
     if (payload.event && payload.payment) {
       const { event, payment } = payload
 
-      // Obter o ID do pedido a partir da referência externa
-      const pedidoId = payment.externalReference
+      // Obter o ID do pedido a partir da referência externa ou buscar pelo pagamento_id
+      let pedidoId = payment.externalReference
 
       if (!pedidoId) {
-        console.error("Webhook recebido sem referência externa (pedidoId)")
-        return NextResponse.json({ error: "Referência externa não encontrada" }, { status: 400 })
+        console.log("Sem referência externa, buscando pedido pelo pagamento_id:", payment.id)
+        
+        // Buscar pedido pelo payment_id no banco
+        const { data: pedido, error: pedidoError } = await supabaseAdmin
+          .from("pedidos")
+          .select("numero")
+          .eq("pagamento_id", payment.id)
+          .single()
+
+        if (pedidoError || !pedido) {
+          console.error("Pedido não encontrado para pagamento_id:", payment.id, pedidoError)
+          return NextResponse.json({ error: "Pedido não encontrado" }, { status: 400 })
+        }
+
+        pedidoId = pedido.numero
+        console.log("Pedido encontrado:", pedidoId)
       }
 
       // Mapear o evento para um status de pagamento
@@ -46,37 +62,61 @@ export async function POST(request: NextRequest) {
           pagamentoStatus = payment.status
       }
 
-      // Atualizar o status do pagamento no banco de dados
-      const { error: updateError } = await supabase
+      // Primeiro, buscar o pedido atual para obter o status anterior e o ID numérico
+      console.log("Buscando pedido atual para obter status anterior:", pedidoId)
+      
+      const { data: pedidoAtual, error: buscarError } = await supabaseAdmin
+        .from("pedidos")
+        .select("id, status")
+        .eq("numero", pedidoId)
+        .single()
+
+      if (buscarError || !pedidoAtual) {
+        console.error("Erro ao buscar pedido:", buscarError)
+        return NextResponse.json({ error: "Pedido não encontrado" }, { status: 404 })
+      }
+
+      const novoStatus = pagamentoStatus === "CONFIRMED" ? "pago" : "pendente"
+      console.log(`Atualizando pedido ${pedidoAtual.id} de "${pedidoAtual.status}" para "${novoStatus}"`)
+      
+      // Atualizar o status do pedido
+      const { data: updateResult, error: updateError } = await supabaseAdmin
         .from("pedidos")
         .update({
-          pagamento_status: pagamentoStatus,
+          status: novoStatus,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", pedidoId)
+        .eq("numero", pedidoId)
+        .select()
 
       if (updateError) {
         console.error("Erro ao atualizar status do pedido:", updateError)
         return NextResponse.json({ error: "Erro ao atualizar status do pedido" }, { status: 500 })
       }
 
-      // Se o pagamento foi confirmado, atualizar o status do pedido para "processando"
-      if (pagamentoStatus === "CONFIRMED") {
-        const { error: updatePedidoError } = await supabase
-          .from("pedidos")
-          .update({
-            status: "processando",
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", pedidoId)
+      // Registrar mudança no histórico
+      const { error: historicoError } = await supabaseAdmin
+        .from("pedido_historico_status")
+        .insert([
+          {
+            pedido_id: pedidoAtual.id,
+            status_anterior: pedidoAtual.status,
+            status_novo: novoStatus,
+            observacao: `Status atualizado via webhook do Asaas - Evento: ${event}`,
+            updated_by: null, // Sistema/automático
+            created_at: new Date().toISOString(),
+          }
+        ])
 
-        if (updatePedidoError) {
-          console.error("Erro ao atualizar status do pedido para processando:", updatePedidoError)
-        }
+      if (historicoError) {
+        console.error("Erro ao registrar histórico de status:", historicoError)
+        // Não retornar erro aqui para não bloquear o webhook
+      } else {
+        console.log("Histórico de status registrado com sucesso")
       }
 
       // Registrar o webhook recebido para fins de auditoria
-      const { error: logError } = await supabase.from("webhook_logs").insert({
+      const { error: logError } = await supabaseAdmin.from("webhook_logs").insert({
         provider: "asaas",
         event: event,
         payload: payload,

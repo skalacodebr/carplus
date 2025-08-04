@@ -887,7 +887,7 @@ export default function Carrinho() {
                       />
                     </div>
                     <div className="text-center w-full">
-                      <p className="font-semibold mb-2 text-gray-800">
+                      <p className="font-semibold mb-2 text-white">
                         Vencimento:{" "}
                         {new Date(
                           pedido?.pix?.expirationDate
@@ -1301,10 +1301,18 @@ export default function Carrinho() {
             ) : (
               <div className="bg-[#3A3942] rounded-lg p-4">
                 <div className="flex items-center">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                  <div className="w-12 h-12 bg-gray-600 rounded-full overflow-hidden mr-3 flex-shrink-0">
+                    <Image
+                      src="/images/revendedor-avatar.png"
+                      alt="Foto do revendedor"
+                      width={48}
+                      height={48}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
                   <div>
                     <p className="font-medium">{currentRevendedorNome}</p>
-                    <p className="text-sm text-gray-400">ID: {currentRevendedorId}</p>
+                    <p className="text-sm text-gray-400">Revendedor selecionado</p>
                   </div>
                 </div>
               </div>

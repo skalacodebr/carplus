@@ -191,11 +191,11 @@ export async function getPacoteByProdutoNome(produtoNome: string) {
   try {
     console.log("Buscando pacote para produto:", produtoNome);
 
-    // Estratégia 1: Buscar por nome exato
+    // Estratégia 1: Buscar por descrição exata
     const { data: pacoteExato, error: errorExato } = await supabase
       .from("pacotes")
-      .select("id, nome, cor")
-      .eq("nome", produtoNome)
+      .select("id, descricao, cor")
+      .eq("descricao", produtoNome)
       .limit(1);
 
     if (!errorExato && pacoteExato && pacoteExato.length > 0) {
@@ -203,11 +203,11 @@ export async function getPacoteByProdutoNome(produtoNome: string) {
       return { data: pacoteExato[0].id, error: null };
     }
 
-    // Estratégia 2: Buscar por nome similar (usando ilike)
+    // Estratégia 2: Buscar por descrição similar (usando ilike)
     const { data: pacoteSimilar, error: errorSimilar } = await supabase
       .from("pacotes")
-      .select("id, nome, cor")
-      .ilike("nome", `%${produtoNome}%`)
+      .select("id, descricao, cor")
+      .ilike("descricao", `%${produtoNome}%`)
       .limit(1);
 
     if (!errorSimilar && pacoteSimilar && pacoteSimilar.length > 0) {
@@ -218,7 +218,7 @@ export async function getPacoteByProdutoNome(produtoNome: string) {
     // Estratégia 3: Buscar todos os pacotes e fazer busca local
     const { data: todosPacotes, error: errorTodos } = await supabase
       .from("pacotes")
-      .select("id, nome, cor")
+      .select("id, descricao, cor")
       .limit(50);
 
     if (errorTodos) {
@@ -234,10 +234,10 @@ export async function getPacoteByProdutoNome(produtoNome: string) {
     console.log("Total de pacotes no banco:", todosPacotes.length);
     console.log("Primeiros 3 pacotes:", todosPacotes.slice(0, 3));
 
-    // Busca local por correspondência parcial no nome
+    // Busca local por correspondência parcial na descrição
     const produtoLower = produtoNome.toLowerCase();
     for (const pacote of todosPacotes) {
-      if (pacote.nome && pacote.nome.toLowerCase().includes(produtoLower)) {
+      if (pacote.descricao && pacote.descricao.toLowerCase().includes(produtoLower)) {
         console.log("Pacote encontrado por busca local:", pacote);
         return { data: pacote.id, error: null };
       }

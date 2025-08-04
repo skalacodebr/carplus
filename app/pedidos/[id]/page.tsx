@@ -24,7 +24,7 @@ type PedidoDetalhado = {
     pacote_id: string | number
     pacotes: {
       id: number
-      nome: string
+      descricao: string
       cor: string
       imagem: string | null
     } | null
@@ -86,7 +86,7 @@ export default function PedidoDetalhe({ params }: { params: Promise<{ id: string
           if (item.pacote_id) {
             const { data: pacoteData } = await supabase
               .from("pacotes")
-              .select("id, nome, cor, imagem")
+              .select("id, descricao, cor, imagem")
               .eq("id", item.pacote_id)
               .single()
             
@@ -323,14 +323,14 @@ export default function PedidoDetalhe({ params }: { params: Promise<{ id: string
                 <div className="w-16 h-16 bg-[#2C2B34] rounded-md overflow-hidden mr-3">
                   <Image
                     src={item.pacotes?.imagem || "/placeholder.svg"}
-                    alt={item.pacotes?.nome || "Pacote"}
+                    alt={item.pacotes?.descricao || "Pacote"}
                     width={64}
                     height={64}
                     className="object-cover w-full h-full"
                   />
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-medium">{item.pacotes?.nome || `Pacote #${item.pacote_id}`}</h4>
+                  <h4 className="font-medium">{item.pacotes?.descricao || `Pacote #${item.pacote_id}`}</h4>
                   <p className="text-sm text-gray-400">{item.pacotes?.cor || "Microesferas Premium"}</p>
                   <div className="flex justify-between items-center mt-1">
                     <span className="text-sm">Qtd: {item.qtd || 0}</span>

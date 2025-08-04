@@ -597,8 +597,8 @@ export default function Carrinho() {
             }));
           }
 
-          // Se o status "RECEIVED", você pode limpar o intervalo
-          if (statusResponse.data === "RECEIVED") {
+          // Se o status for "RECEIVED" ou "CONFIRMED", você pode limpar o intervalo
+          if (statusResponse.data === "RECEIVED" || statusResponse.data === "CONFIRMED") {
             clearInterval(intervalId);
             console.log("Status final alcançado, parando verificação.");
             setShowModalPagamento(false);
@@ -674,6 +674,36 @@ export default function Carrinho() {
   };
 
   const [showEmbedBoleto, setShowEmbedBoleto] = useState(false);
+
+  // Função para simular pagamento
+  const simulatePayment = async (status: string, paymentId: string) => {
+    try {
+      const response = await fetch('/api/simulate-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          paymentId: paymentId,
+          orderNumber: pedido?.numero,
+          status: status
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        alert(`Pagamento simulado com sucesso: ${status}`)
+        // Recarregar o status do pedido
+        await checkStatusPedido(paymentId)
+      } else {
+        throw new Error(data.error || 'Erro ao simular pagamento')
+      }
+    } catch (err: any) {
+      console.error('Erro ao simular pagamento:', err)
+      alert('Erro ao simular pagamento: ' + err.message)
+    }
+  }
 
   const handleCancelarCompra = async (id: string) => {
     try {
@@ -852,6 +882,12 @@ export default function Carrinho() {
                           className="w-full py-2 px-4 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
                         >
                           Cancelar Compra
+                        </button>
+                        <button
+                          onClick={() => simulatePayment('PAYMENT_CONFIRMED', pedido?.pagamentoId)}
+                          className="w-full py-2 px-4 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                        >
+                          Simular Pagamento
                         </button>
                       </div>
                     </div>

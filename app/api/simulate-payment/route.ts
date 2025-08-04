@@ -3,67 +3,104 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function POST(request: NextRequest) {
   try {
-    const { paymentId, status } = await request.json();
+    const { paymentId, status, orderNumber } = await request.json();
 
-    if (!paymentId || !status) {
+    if (!paymentId && !orderNumber) {
       return NextResponse.json(
-        { error: "PaymentId e status são obrigatórios" },
+        { error: "PaymentId ou orderNumber é obrigatório" },
         { status: 400 }
       );
     }
 
-    // Validar se o status é válido
-    const validStatuses = [
-      "PAYMENT_CONFIRMED",
-      "PAYMENT_RECEIVED", 
-      "PAYMENT_OVERDUE",
-      "PAYMENT_CANCELED",
-      "PAYMENT_REFUNDED"
-    ];
+    console.log("=== SIMULAÇÃO DE PAGAMENTO ===");
+    console.log("Payment ID:", paymentId);
+    console.log("Order Number:", orderNumber);
+    console.log("Status solicitado:", status);
 
-    if (!validStatuses.includes(status)) {
+    // Buscar o pedido
+    let query = supabaseAdmin
+      .from("pedidos")
+      .select("id, numero, status");
+
+    // Tentar buscar pelo número do pedido primeiro
+    if (orderNumber) {
+      query = query.eq("numero", orderNumber);
+    }
+
+    const { data: pedido, error: pedidoError } = await query.single();
+
+    if (pedidoError || !pedido) {
+      console.error("Pedido não encontrado:", pedidoError);
       return NextResponse.json(
-        { error: "Status inválido" },
-        { status: 400 }
+        { error: "Pedido não encontrado" },
+        { status: 404 }
       );
     }
 
-    // Simular webhook do Asaas enviando para nossa própria API
-    const webhookPayload = {
-      event: status,
-      payment: {
-        id: paymentId,
-        status: status.replace("PAYMENT_", ""),
-        externalReference: null, // Simular webhook real sem referência externa
-        value: 100.00, // Valor de exemplo
-        billingType: "PIX",
-        dateCreated: new Date().toISOString(),
-      }
-    };
+    console.log("Pedido encontrado:", pedido);
 
-    // Chamar nossa própria API de webhook
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    
-    const webhookResponse = await fetch(`${baseUrl}/api/webhooks/asaas`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(webhookPayload),
-    });
+    // Definir o novo status baseado na simulação
+    const novoStatus = status === "PAYMENT_CONFIRMED" || status === "PAYMENT_RECEIVED" 
+      ? "pago" 
+      : "pendente";
 
-    const webhookResult = await webhookResponse.json();
-
-    if (!webhookResponse.ok) {
-      throw new Error(`Erro no webhook: ${webhookResult.error}`);
+    // Se o status já é o desejado, não fazer nada
+    if (pedido.status === novoStatus) {
+      console.log("Pedido já está com o status desejado");
+      return NextResponse.json({
+        success: true,
+        message: `Pedido já está ${novoStatus}`,
+        pedido: {
+          numero: pedido.numero,
+          status: pedido.status
+        }
+      });
     }
+
+    // Atualizar o status do pedido diretamente
+    const { error: updateError } = await supabaseAdmin
+      .from("pedidos")
+      .update({
+        status: novoStatus,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", pedido.id);
+
+    if (updateError) {
+      console.error("Erro ao atualizar pedido:", updateError);
+      return NextResponse.json(
+        { error: "Erro ao atualizar status do pedido" },
+        { status: 500 }
+      );
+    }
+
+    // Registrar no histórico de status
+    const { error: historicoError } = await supabaseAdmin
+      .from("pedido_historico_status")
+      .insert({
+        pedido_id: pedido.id,
+        status_anterior: pedido.status,
+        status_novo: novoStatus,
+        observacao: `Status simulado para testes - Evento: ${status}`,
+        updated_by: null,
+        created_at: new Date().toISOString(),
+      });
+
+    if (historicoError) {
+      console.error("Erro ao registrar histórico:", historicoError);
+      // Não retornar erro, pois o importante é atualizar o pedido
+    }
+
+    console.log(`Pedido ${pedido.numero} atualizado de "${pedido.status}" para "${novoStatus}"`);
 
     return NextResponse.json({
       success: true,
-      message: `Pagamento simulado com status: ${status}`,
-      webhookResult
+      message: `Pagamento simulado com sucesso`,
+      pedido: {
+        numero: pedido.numero,
+        statusAnterior: pedido.status,
+        statusNovo: novoStatus
+      }
     });
 
   } catch (error: any) {

@@ -79,6 +79,9 @@ export async function POST(request: NextRequest) {
       paymentData.remoteIp = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "127.0.0.1"
     }
 
+    // Log final antes de enviar
+    console.log("PaymentData FINAL sendo enviado para Asaas:", JSON.stringify(paymentData, null, 2))
+
     // Criar cobrança no Asaas
     const payment = await createPayment(paymentData)
 

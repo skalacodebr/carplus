@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
-import { getPedidosCliente } from "@/lib/database"
+import { getPedidosCliente, cancelarPedido } from "@/lib/database"
 
 interface PedidoItem {
   id: number
@@ -36,6 +36,7 @@ export default function Historico() {
   const { user } = useAuth()
   const [pedidos, setPedidos] = useState<Pedido[]>([])
   const [loading, setLoading] = useState(true)
+  const [cancelando, setCancelando] = useState<number | null>(null)
 
   useEffect(() => {
     const fetchPedidos = async () => {
@@ -60,6 +61,56 @@ export default function Historico() {
 
     fetchPedidos()
   }, [user])
+
+  // Função para cancelar pedido
+  const handleCancelarPedido = async (pedidoId: number, pagamentoId?: string) => {
+    if (!confirm("Tem certeza que deseja cancelar este pedido?")) {
+      return
+    }
+
+    try {
+      setCancelando(pedidoId)
+      
+      // Se houver pagamento_id, cancelar no Asaas também
+      if (pagamentoId) {
+        const response = await fetch('/api/asaas/proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            endpoint: `payments/${pagamentoId}`,
+            method: 'DELETE'
+          })
+        })
+        
+        if (!response.ok) {
+          console.error('Erro ao cancelar pagamento no Asaas')
+        }
+      }
+
+      // Cancelar no banco local
+      const { error } = await cancelarPedido(pedidoId.toString())
+      
+      if (error) {
+        throw new Error('Erro ao cancelar pedido')
+      }
+
+      // Atualizar lista local
+      setPedidos(prev => 
+        prev.map(p => 
+          p.id === pedidoId 
+            ? { ...p, status: 'cancelado' }
+            : p
+        )
+      )
+      
+      alert('Pedido cancelado com sucesso!')
+    } catch (error) {
+      console.error('Erro ao cancelar pedido:', error)
+      alert('Erro ao cancelar pedido. Tente novamente.')
+    } finally {
+      setCancelando(null)
+    }
+  }
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -318,12 +369,24 @@ export default function Historico() {
 
                 <div className="flex justify-between items-center pt-3 border-t border-[#2C2B34]">
                   <span className="font-bold text-lg">Total: R$ {pedido.valor_total.toFixed(2)}</span>
-                  <button
-                    onClick={() => router.push(`/pedidos/${pedido.id}`)}
-                    className="text-[#fdc300] text-sm font-medium hover:underline"
-                  >
-                    Ver detalhes →
-                  </button>
+                  <div className="flex gap-3 items-center">
+                    {/* Botão cancelar para pedidos não pagos */}
+                    {pedido.status.toLowerCase() === 'pendente' && (
+                      <button
+                        onClick={() => handleCancelarPedido(pedido.id)}
+                        disabled={cancelando === pedido.id}
+                        className="text-red-400 text-sm font-medium hover:underline disabled:opacity-50"
+                      >
+                        {cancelando === pedido.id ? 'Cancelando...' : 'Cancelar'}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => router.push(`/pedidos/${pedido.id}`)}
+                      className="text-[#fdc300] text-sm font-medium hover:underline"
+                    >
+                      Ver detalhes →
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

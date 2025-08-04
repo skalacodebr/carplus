@@ -19,6 +19,7 @@ export default function ConfirmacaoPagamento() {
   const [pedidoId, setPedidoId] = useState<string | null>(null)
   const [checkingStatus, setCheckingStatus] = useState(false)
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null)
+  const [simulatingPayment, setSimulatingPayment] = useState(false)
 
   useEffect(() => {
     // Verificar se o usuário está autenticado
@@ -203,6 +204,44 @@ export default function ConfirmacaoPagamento() {
     }
   }
 
+  // Função para simular pagamento (apenas em desenvolvimento)
+  const simulatePayment = async (status: string) => {
+    if (!paymentData?.id) return
+
+    try {
+      setSimulatingPayment(true)
+      const response = await fetch('/api/simulate-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          paymentId: paymentData.id,
+          status: status
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Atualizar o status local
+        setPaymentStatus(status.replace('PAYMENT_', ''))
+        alert(`Pagamento simulado com sucesso: ${status}`)
+        // Verificar o status novamente para garantir que foi atualizado
+        setTimeout(() => {
+          checkPaymentStatus()
+        }, 1000)
+      } else {
+        throw new Error(data.error || 'Erro ao simular pagamento')
+      }
+    } catch (err) {
+      console.error('Erro ao simular pagamento:', err)
+      alert('Erro ao simular pagamento: ' + err.message)
+    } finally {
+      setSimulatingPayment(false)
+    }
+  }
+
   // Função para renderizar informações específicas do método de pagamento
   const renderPaymentMethodInfo = () => {
     if (!paymentData) return null
@@ -371,6 +410,54 @@ export default function ConfirmacaoPagamento() {
               "Verificar Status do Pagamento"
             )}
           </button>
+        )}
+
+        {/* Botões de simulação (apenas para testes) */}
+        {(process.env.NODE_ENV === 'development' || true) && (
+          <div className="bg-yellow-500 bg-opacity-10 border border-yellow-500 rounded-lg p-4 mb-4">
+            <h3 className="text-yellow-400 font-bold text-center mb-3">🧪 Simulação de Pagamentos (Teste)</h3>
+            <p className="text-yellow-300 text-xs text-center mb-4">
+              Use os botões abaixo para simular diferentes status de pagamento
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => simulatePayment('PAYMENT_CONFIRMED')}
+                disabled={simulatingPayment}
+                className="bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded text-sm font-medium disabled:opacity-50"
+              >
+                ✅ Confirmar
+              </button>
+              <button
+                onClick={() => simulatePayment('PAYMENT_OVERDUE')}
+                disabled={simulatingPayment}
+                className="bg-yellow-600 hover:bg-yellow-700 text-white py-2 px-3 rounded text-sm font-medium disabled:opacity-50"
+              >
+                ⏰ Vencer
+              </button>
+              <button
+                onClick={() => simulatePayment('PAYMENT_CANCELED')}
+                disabled={simulatingPayment}
+                className="bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded text-sm font-medium disabled:opacity-50"
+              >
+                ❌ Cancelar
+              </button>
+              <button
+                onClick={() => simulatePayment('PAYMENT_REFUNDED')}
+                disabled={simulatingPayment}
+                className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-sm font-medium disabled:opacity-50"
+              >
+                🔄 Reembolsar
+              </button>
+            </div>
+            {simulatingPayment && (
+              <div className="text-center mt-2">
+                <div className="inline-flex items-center text-yellow-300 text-sm">
+                  <div className="w-4 h-4 border-t-2 border-yellow-400 border-solid rounded-full animate-spin mr-2"></div>
+                  Simulando...
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Botões de navegação */}

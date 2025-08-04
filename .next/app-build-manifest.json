@@ -26,45 +26,25 @@
       "static/chunks/main-app.js",
       "static/chunks/app/carrinho/page.js"
     ],
-    "/perfil/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/perfil/page.js"
-    ],
-    "/calculadora/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/calculadora/page.js"
-    ],
-    "/resultado/loading": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/resultado/loading.js"
-    ],
-    "/resultado/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/resultado/page.js"
-    ],
-    "/cadastro/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/cadastro/page.js"
-    ],
-    "/historico/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/historico/page.js"
-    ],
     "/api/asaas/proxy/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/asaas/proxy/route.js"
     ],
+    "/api/simulate-payment/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/simulate-payment/route.js"
+    ],
     "/pedidos/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/pedidos/page.js"
+    ],
+    "/perfil/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/perfil/page.js"
     ],
     "/pedidos/[id]/page": [
       "static/chunks/webpack.js",

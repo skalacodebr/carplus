@@ -1,22 +1,4 @@
 {
-  "app/cadastro/page.tsx -> @/lib/auth": {
-    "id": "app/cadastro/page.tsx -> @/lib/auth",
-    "files": [
-      "static/chunks/_app-pages-browser_lib_auth_ts.js"
-    ]
-  },
-  "app/calculadora/page.tsx -> @/lib/auth": {
-    "id": "app/calculadora/page.tsx -> @/lib/auth",
-    "files": [
-      "static/chunks/_app-pages-browser_lib_auth_ts.js"
-    ]
-  },
-  "app/calculadora/page.tsx -> @/lib/database": {
-    "id": "app/calculadora/page.tsx -> @/lib/database",
-    "files": [
-      "static/chunks/_app-pages-browser_lib_database_ts.js"
-    ]
-  },
   "app/carrinho/page.tsx -> @/lib/database": {
     "id": "app/carrinho/page.tsx -> @/lib/database",
     "files": []
@@ -28,12 +10,6 @@
   "app/dashboard/page.tsx -> @/lib/supabase": {
     "id": "app/dashboard/page.tsx -> @/lib/supabase",
     "files": []
-  },
-  "app/historico/page.tsx -> @/lib/database": {
-    "id": "app/historico/page.tsx -> @/lib/database",
-    "files": [
-      "static/chunks/_app-pages-browser_lib_database_ts.js"
-    ]
   },
   "app/login/page.tsx -> @/lib/auth": {
     "id": "app/login/page.tsx -> @/lib/auth",

@@ -704,6 +704,12 @@ export default function Carrinho() {
         // Fechar modal
         setShowModalPagamento(false)
         
+        // Limpar carrinho no banco de dados e no contexto
+        if (user?.id) {
+          await limparCarrinhoUsuario(user.id)
+        }
+        clearCart()
+        
         // Aguardar um pouco para o usuário ver a mensagem
         setTimeout(() => {
           // Limpar estados

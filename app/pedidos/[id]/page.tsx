@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -31,11 +31,13 @@ type PedidoDetalhado = {
   }[]
 }
 
-export default function PedidoDetalhe({ params }: { params: { id: string } }) {
+export default function PedidoDetalhe({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const { user, loading } = useAuth()
   const [pedido, setPedido] = useState<PedidoDetalhado | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  
+  const resolvedParams = use(params)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -43,15 +45,15 @@ export default function PedidoDetalhe({ params }: { params: { id: string } }) {
       return
     }
 
-    if (user && params.id) {
+    if (user && resolvedParams.id) {
       fetchPedido()
     }
-  }, [user, loading, router, params.id])
+  }, [user, loading, router, resolvedParams.id])
 
   const fetchPedido = async () => {
     try {
       setIsLoading(true)
-      console.log("Buscando pedido:", params.id)
+      console.log("Buscando pedido:", resolvedParams.id)
 
       const { supabase } = await import("@/lib/supabase")
 
@@ -59,18 +61,18 @@ export default function PedidoDetalhe({ params }: { params: { id: string } }) {
       const { data: pedidoData, error: pedidoError } = await supabase
         .from("pedidos")
         .select("*")
-        .eq("id", params.id)
+        .eq("id", resolvedParams.id)
         .eq("cliente_id", user!.id)
         .single()
 
       if (pedidoError) throw pedidoError
 
       // Depois buscar os itens do pedido
-      console.log("Buscando itens para pedido_id:", params.id, "tipo:", typeof params.id)
+      console.log("Buscando itens para pedido_id:", resolvedParams.id, "tipo:", typeof resolvedParams.id)
       const { data: itensData, error: itensError } = await supabase
         .from("pedido_itens")
         .select("*")
-        .eq("pedido_id", parseInt(params.id))
+        .eq("pedido_id", parseInt(resolvedParams.id))
 
       console.log("Itens encontrados:", itensData)
       if (itensError) {

@@ -462,15 +462,32 @@ export default function Carrinho() {
         // Limpar carrinho no contexto (estado local)
         clearCart();
 
-        // Após limpar carrinho e antes do setTimeout
+        // Simular pagamento automático para cartão
+        try {
+          await fetch('/api/simulate-payment', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              paymentId: pagamentoId,
+              orderNumber: pedidoData.numero,
+              status: "PAYMENT_CONFIRMED"
+            })
+          });
+        } catch (error) {
+          console.error("Erro ao simular pagamento automático:", error);
+        }
+
+        // Após limpar carrinho e simular pagamento
         setCheckoutFinalizado(true);
-        // Simular pagamento automático - mostrar sucesso
+        // Mostrar sucesso
         setAlertConfig({
           isOpen: true,
           title: "Pedido Realizado com Sucesso! 🎉",
           message: `Seu pedido #${
-            pedido.numero
-          } foi criado e o pagamento foi processado automaticamente.\n\nTotal: R$ ${pedido.valor_total.toFixed(
+            pedidoData.numero
+          } foi criado e o pagamento foi processado automaticamente.\n\nTotal: R$ ${pedidoData.valor_total.toFixed(
             2
           )}\n\nVocê pode acompanhar o status do seu pedido na página de histórico.`,
           type: "success",
@@ -984,6 +1001,12 @@ export default function Carrinho() {
                           className="w-full py-2 px-4 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
                         >
                           Cancelar Compra
+                        </button>
+                        <button
+                          onClick={() => simulatePayment('PAYMENT_CONFIRMED', pedido?.pagamentoId)}
+                          className="w-full py-2 px-4 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                        >
+                          Simular Pagamento
                         </button>
                       </div>
                     </div>

@@ -693,15 +693,37 @@ export default function Carrinho() {
       const data = await response.json()
 
       if (data.success) {
-        alert(`Pagamento simulado com sucesso: ${status}`)
-        // Recarregar o status do pedido
-        await checkStatusPedido(paymentId)
+        // Mostrar alerta de sucesso
+        setAlertConfig({
+          isOpen: true,
+          title: "Pagamento Confirmado! 🎉",
+          message: "Seu pagamento foi processado com sucesso!",
+          type: "success",
+        })
+
+        // Fechar modal
+        setShowModalPagamento(false)
+        
+        // Aguardar um pouco para o usuário ver a mensagem
+        setTimeout(() => {
+          // Limpar estados
+          setPendingPayment(null)
+          setPedido(null)
+          
+          // Redirecionar para página de pedidos
+          router.push('/pedidos')
+        }, 1500)
       } else {
         throw new Error(data.error || 'Erro ao simular pagamento')
       }
     } catch (err: any) {
       console.error('Erro ao simular pagamento:', err)
-      alert('Erro ao simular pagamento: ' + err.message)
+      setAlertConfig({
+        isOpen: true,
+        title: "Erro ao simular pagamento",
+        message: err.message || "Ocorreu um erro ao processar o pagamento",
+        type: "error",
+      })
     }
   }
 
